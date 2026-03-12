@@ -1,2 +1,2 @@
-# Final-year-project-Tirelomate
-An online service 
+# Tirelomate
+A service application

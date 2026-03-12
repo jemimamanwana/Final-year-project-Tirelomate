@@ -1,0 +1,9 @@
+curl -X POST http://localhost:5000/api/wallet/send \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo1LCJleHAiOjE3NjAxMjg3MzV9.HYlWqHRmMTbqUjzTl2w8B_IQ2gfLnrMLtIAh_n162Z8"" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sender_secret_key": "Sa18db51d56e53c99b7e6809f5ccf85da880cfa824ea8bc742d21b30a",
+    "recipient_public_key": "Gfa378bce9d17d6dabdda389880af64f7ffae3c12e0ac76b811ca6929",
+    "amount": 50,
+    "memo": "Provider transfer"
+  }'
