@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tirelomate - Service Marketplace</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>Tirelomate</h1>
+                <p>Where Services Meet Needs</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active">Home</a></li>
+                    <li><a href="#services">Services</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#testimonials">Testimonials</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons" id="authButtons">
+                <button id="loginBtn" class="outline-btn">Log In</button>
+                <button id="signupBtn" class="primary-btn">Sign Up</button>
+            </div>
+            <div class="user-welcome" id="userWelcome" style="display: none;">
+                <span id="welcomeMessage">Welcome, User!</span>
+                <button id="dashboardBtn" class="primary-btn">Dashboard</button>
+                <button id="logoutBtn" class="outline-btn">Logout</button>
+            </div>
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section with Slider -->
+    <section class="hero" id="heroSlider">
+        <!-- Slides -->
+        <div class="hero-slides">
+            <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&auto=format&fit=crop')"></div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1600&auto=format&fit=crop')"></div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1600&auto=format&fit=crop')"></div>
+            <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1600&auto=format&fit=crop')"></div>
+        </div>
+
+        <!-- Dark overlay -->
+        <div class="hero-overlay"></div>
+
+        <!-- Diagonal geometric shapes -->
+        <div class="geo-left"></div>
+        <div class="geo-top-right"></div>
+        <div class="geo-bottom-right"></div>
+        <div class="geo-accent"></div>
+
+        <!-- Centred hero content -->
+        <div class="hero-content">
+            <div class="hero-subtitle">
+                <span class="subtitle-line"></span>
+                <span>WHERE SERVICES MEET NEEDS</span>
+            </div>
+            <h1 class="hero-title">
+                <span id="typingTarget"></span><span class="typing-cursor"></span>
+            </h1>
+            <a href="#services" class="hero-cta-btn">EXPLORE SERVICES</a>
+        </div>
+
+        <!-- Slider arrows -->
+        <div class="hero-nav-arrows">
+            <button class="hero-arrow prev" aria-label="Previous slide"><i class="fas fa-arrow-left"></i></button>
+            <button class="hero-arrow next" aria-label="Next slide"><i class="fas fa-arrow-right"></i></button>
+        </div>
+
+        <!-- Slide indicators -->
+        <div class="hero-dots">
+            <span class="hero-dot active"></span>
+            <span class="hero-dot"></span>
+            <span class="hero-dot"></span>
+            <span class="hero-dot"></span>
+        </div>
+    </section>
+
+    <!-- Search bar floating between hero and services -->
+    <section class="search-section">
+        <div class="container">
+            <div class="search-bar">
+                <input type="text" id="serviceSearch" placeholder="What service do you need?">
+                <input type="text" id="locationSearch" placeholder="Location">
+                <button class="primary-btn" id="searchBtn"><i class="fas fa-search"></i> Search</button>
+                <button class="outline-btn" id="clearSearchBtn" style="display: none;"><i class="fas fa-times"></i> Clear</button>
+            </div>
+            <div class="popular-tags">
+                <span>Popular:</span>
+                <a href="#" class="popular-tag" data-service="Cleaning">Cleaning</a>
+                <a href="#" class="popular-tag" data-service="Web Design">Web Design</a>
+                <a href="#" class="popular-tag" data-service="Tutoring">Tutoring</a>
+                <a href="#" class="popular-tag" data-service="Moving">Moving</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar">
+        <div class="container">
+            <div class="stat-item animate-on-scroll">
+                <div class="stat-number">1000+</div>
+                <div class="stat-label">Services Offered</div>
+            </div>
+            <div class="stat-item animate-on-scroll">
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Happy Clients</div>
+            </div>
+            <div class="stat-item animate-on-scroll">
+                <div class="stat-number">98%</div>
+                <div class="stat-label">Satisfaction Rate</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <h2>Featured Services</h2>
+                <p>Browse our most popular service categories</p>
+            </div>
+
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="all">All Services</button>
+                <button class="category-tab" data-category="home">Home Services</button>
+                <button class="category-tab" data-category="tech">Tech Services</button>
+                <button class="category-tab" data-category="education">Education</button>
+                <button class="category-tab" data-category="business">Business</button>
+            </div>
+
+            <div class="services-grid" id="servicesGrid">
+                <!-- Services will be loaded here via JavaScript -->
+            </div>
+
+            <div class="view-all">
+                <a href="services.html">
+                    <button class="outline-btn">View All Services</button>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <h2 class="animate-on-scroll">We Connect You With Top Professionals</h2>
+                <p class="animate-on-scroll">Tirelomate was founded with a simple mission: to make finding trusted professionals easy and stress-free. Our platform carefully vets all service providers to ensure quality and reliability.</p>
+
+                <div class="about-features">
+                    <div class="feature-item animate-on-scroll">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Verified Professionals</h3>
+                        <p>All providers undergo background checks and verification</p>
+                    </div>
+                    <div class="feature-item animate-on-scroll">
+                        <div class="feature-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <h3>Transparent Pricing</h3>
+                        <p>No hidden fees - know exactly what you'll pay upfront</p>
+                    </div>
+                    <div class="feature-item animate-on-scroll">
+                        <div class="feature-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3>Customer Reviews</h3>
+                        <p>Read real feedback from previous clients</p>
+                    </div>
+                </div>
+            </div>
+            <div class="about-image">
+                <div class="image-container animate-on-scroll">
+                    <div class="pattern-overlay"></div>
+                    <img src="img/team.jpg" alt="Our team">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <h2>How Tirelomate Works</h2>
+                <p>Getting help has never been easier</p>
+            </div>
+
+            <div class="steps">
+                <div class="step animate-on-scroll">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Search Services</h3>
+                        <p>Browse our extensive directory or search for specific services</p>
+                    </div>
+                </div>
+                <div class="step animate-on-scroll">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Compare Options</h3>
+                        <p>View profiles, ratings, and prices to find your perfect match</p>
+                    </div>
+                </div>
+                <div class="step animate-on-scroll">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Book & Pay</h3>
+                        <p>Schedule your service and pay securely through our platform</p>
+                    </div>
+                </div>
+                <div class="step animate-on-scroll">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Enjoy Service</h3>
+                        <p>Relax while the professional handles everything</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials">
+        <div class="container">
+            <div class="section-header animate-on-scroll">
+                <h2>What Our Clients Say</h2>
+                <p>Hear from people who've used our services</p>
+            </div>
+
+            <div class="testimonial-slider">
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="testimonial-content">
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"The web developer I found through Tirelomate completely transformed my online presence. The process was seamless and the results exceeded my expectations."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="img/woman.jpg" alt="Sarah Johnson">
+                        <div class="author-info">
+                            <h4>Sarah Johnson</h4>
+                            <p>Small Business Owner</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="testimonial-content">
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p>"I've used Tirelomate for multiple home services and each experience has been fantastic. The cleaners are thorough and the handyman fixed everything on my list."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="img/man.jpg" alt="Michael Chen">
+                        <div class="author-info">
+                            <h4>Michael Chen</h4>
+                            <p>Homeowner</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card animate-on-scroll">
+                    <div class="testimonial-content">
+                        <div class="rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <p>"As a tutor on Tirelomate, I've been able to build a steady client base. The platform makes it easy to connect with students and manage my schedule."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <img src="img/womanAgora.jpg" alt="Emily Rodriguez">
+                        <div class="author-info">
+                            <h4>Emily Rodriguez</h4>
+                            <p>Math Tutor</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content animate-on-scroll">
+                <h2>Ready to find your perfect service provider?</h2>
+                <p>Join thousands of satisfied customers who've found reliable help through Tirelomate</p>
+                <button class="primary-btn">Get Started Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <h3>Tirelomate</h3>
+                        <p>Premium Services Marketplace</p>
+                    </div>
+                    <p>Connecting customers with trusted professionals since 2025.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#about">About Us</a></li>
+                        <li><a href="#testimonials">Testimonials</a></li>
+                        <li><a href="#">Become a Provider</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Services</h3>
+                    <ul>
+                        <li><a href="#">Home Services</a></li>
+                        <li><a href="#">Tech Support</a></li>
+                        <li><a href="#">Tutoring</a></li>
+                        <li><a href="#">Business Services</a></li>
+                        <li><a href="#">Creative Services</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h3>Contact Us</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> Gaborone, Botswana</li>
+                        <li><i class="fas fa-phone"></i> (267) 76146451</li>
+                        <li><i class="fas fa-phone"></i> Jemima Manwana</li>
+                        <li><i class="fas fa-envelope"></i> info@Tirelomate.com</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 Tirelomate. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Welcome Back</h2>
+            <p>Log in to your account</p>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                    <a href="#" class="forgot-password">Forgot password?</a>
+                </div>
+                <button type="submit" class="primary-btn">Log In</button>
+                <div class="form-footer">
+                    <p>Don't have an account? <a href="#" id="showSignup">Sign up</a></p>
+                </div>
+            </form>
+
+            <div class="social-login">
+                <p>Or log in with:</p>
+                <div class="social-buttons">
+                    <button class="social-btn google"><i class="fab fa-google"></i> Google</button>
+                    <button class="social-btn facebook"><i class="fab fa-facebook-f"></i> Facebook</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Create Your Account</h2>
+            <p>Join Tirelomate to access thousands of services</p>
+
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="signupName">Full Name</label>
+                    <input type="text" id="signupName" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupEmail">Email Address</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="signupUserType">I want to:</label>
+                    <select id="signupUserType" name="userType" required>
+                        <option value="customer" selected>Find and book services</option>
+                        <option value="provider">Offer my services</option>
+                    </select>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="termsAgree" required>
+                    <label for="termsAgree">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+                </div>
+                <button type="submit" class="primary-btn">Create Account</button>
+                <div class="form-footer">
+                    <p>Already have an account? <a href="#" id="showLogin">Log in</a></p>
+                </div>
+            </form>
+
+            <div class="social-login">
+                <p>Or sign up with:</p>
+                <div class="social-buttons">
+                    <button class="social-btn google"><i class="fab fa-google"></i> Google</button>
+                    <button class="social-btn facebook"><i class="fab fa-facebook-f"></i> Facebook</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="serviceModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="serviceModalContent">
+                <!-- Service details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chatbot -->
+    <div class="chatbot-container">
+        <div class="chatbot-toggle" id="chatbotToggle">
+            <i class="fas fa-comments"></i>
+        </div>
+
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <h3>ServiceHub Assistant</h3>
+                <div class="chatbot-close" id="chatbotClose">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="chatbot-messages" id="chatbotMessages">
+                <!-- Messages will be added here -->
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbotInput" placeholder="Ask me anything about services...">
+                <button id="chatbotSend"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/hero.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
