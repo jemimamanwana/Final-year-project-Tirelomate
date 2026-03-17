@@ -183,6 +183,27 @@ class API {
         }
     }
 
+    async updateService(serviceId, serviceData) {
+        try {
+            return await this.request(`/services/${serviceId}`, {
+                method: 'PUT',
+                body: JSON.stringify(serviceData)
+            });
+        } catch (error) {
+            throw new Error('Failed to update service: ' + error.message);
+        }
+    }
+
+    async deleteService(serviceId) {
+        try {
+            return await this.request(`/services/${serviceId}`, {
+                method: 'DELETE'
+            });
+        } catch (error) {
+            throw new Error('Failed to delete service: ' + error.message);
+        }
+    }
+
     // Reviews Methods
     async getServiceReviews(serviceId) {
         try {
@@ -201,6 +222,14 @@ class API {
         } catch (error) {
             throw new Error('Failed to create review: ' + error.message);
         }
+    }
+
+    async getProviderRating(providerId) {
+        return await this.request(`/provider/${providerId}/rating`);
+    }
+
+    async getProviderReviews(providerId) {
+        return await this.request(`/provider/${providerId}/reviews`);
     }
 
     // Bookings Methods
@@ -285,6 +314,36 @@ class API {
         } catch (error) {
             throw new Error('Failed to send message: ' + error.message);
         }
+    }
+
+    // Payment Methods
+    async createPayment(bookingId, amount, paymentMethod) {
+        return await this.request('/payments', {
+            method: 'POST',
+            body: JSON.stringify({ booking_id: bookingId, amount, payment_method: paymentMethod })
+        });
+    }
+
+    async getPayments() {
+        return await this.request('/payments');
+    }
+
+    // Messaging Methods
+    async getConversations() {
+        return await this.request('/messages/conversations');
+    }
+
+    async getMessages(withUserId) {
+        return await this.request(`/messages?with=${withUserId}`);
+    }
+
+    async sendDirectMessage(receiverId, content, bookingId = null) {
+        const body = { receiver_id: receiverId, content };
+        if (bookingId) body.booking_id = bookingId;
+        return await this.request('/messages', {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
     }
 }
 
@@ -470,6 +529,21 @@ window.chat = {
             console.error('Failed to send chat message:', error);
             return { response: 'Sorry, I am unable to respond at the moment. Please try again later.' };
         }
+    }
+};
+
+// Messaging Helper Functions
+window.messaging = {
+    async getConversations() {
+        try { return await api.getConversations(); }
+        catch (e) { console.error('Failed to get conversations:', e); return []; }
+    },
+    async getMessages(withUserId) {
+        try { return await api.getMessages(withUserId); }
+        catch (e) { console.error('Failed to get messages:', e); return []; }
+    },
+    async send(receiverId, content, bookingId) {
+        return await api.sendDirectMessage(receiverId, content, bookingId);
     }
 };
 

@@ -285,51 +285,48 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
-        
+
         if (!email || !password) {
             showNotification('Please fill in all fields');
             return;
         }
-        
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Logging in...';
+        submitBtn.disabled = true;
+
         try {
-            // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Logging in...';
-            submitBtn.disabled = true;
-            
             // Attempt login using the API
             const response = await window.auth.login(email, password);
-            
+
             if (response.token) {
                 showNotification('Login successful! Redirecting to dashboard...', 'success');
-                
+
                 // Update UI to show user is logged in
                 updateAuthUI();
-                
+
                 // Close modal and redirect based on user type
                 setTimeout(() => {
                     closeModal(loginModal);
-                    // Redirect based on user type
                     if (response.user_type === 'provider') {
                         window.location.href = 'Services-provider-dashboard.html';
                     } else {
                         window.location.href = 'dashboard.html';
                     }
                 }, 1500);
+                return; // Skip finally reset — page is redirecting
             } else {
                 showNotification('Login failed. Please try again.', 'error');
-                // Reset button state immediately for failed login
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
             }
         } catch (error) {
             console.error('Login error:', error);
             showNotification(error.message || 'Login failed. Please try again.', 'error');
-            // Reset button state for error case
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.textContent = 'Login';
+        } finally {
+            submitBtn.textContent = originalText;
             submitBtn.disabled = false;
+            // Clear password so user can retype
+            document.getElementById('loginPassword').value = '';
         }
     });
     
@@ -339,41 +336,40 @@ document.addEventListener('DOMContentLoaded', function() {
         const email = document.getElementById('signupEmail').value;
         const password = document.getElementById('signupPassword').value;
         const confirmPassword = document.getElementById('signupConfirmPassword').value;
-        
+
         // Get selected user type
         const userType = document.getElementById('signupUserType').value;
-        
+
         if (password !== confirmPassword) {
             showNotification('Passwords do not match!', 'error');
             return;
         }
-        
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Creating Account...';
+        submitBtn.disabled = true;
+
         try {
-            // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Creating Account...';
-            submitBtn.disabled = true;
-            
             // Attempt registration using the API with user type
             const response = await window.auth.register(name, email, password, userType);
-            
+
             if (response.token) {
                 showNotification('Account created successfully! Welcome to Tirelomate. Redirecting to dashboard...', 'success');
-                
+
                 // Update UI to show user is logged in
                 updateAuthUI();
-                
+
                 // Close modal and redirect based on user type
                 setTimeout(() => {
                     closeModal(signupModal);
-                    // Redirect based on user type
                     if (response.user_type === 'provider') {
                         window.location.href = 'Services-provider-dashboard.html';
                     } else {
                         window.location.href = 'dashboard.html';
                     }
                 }, 1500);
+                return; // Skip finally reset — page is redirecting
             } else {
                 showNotification('Registration failed. Please try again.', 'error');
             }
@@ -381,10 +377,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Registration error:', error);
             showNotification(error.message || 'Registration failed. Please try again.', 'error');
         } finally {
-            // Reset button state
-            const submitBtn = this.querySelector('button[type="submit"]');
             submitBtn.textContent = originalText;
             submitBtn.disabled = false;
+            // Clear passwords so user can retype
+            document.getElementById('signupPassword').value = '';
+            document.getElementById('signupConfirmPassword').value = '';
         }
     });
     
@@ -647,6 +644,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 console.error('Error checking user type:', error);
+                showNotification('Error checking user type. Redirecting...', 'error');
                 // Fallback to customer dashboard
                 window.location.href = 'dashboard.html';
             }

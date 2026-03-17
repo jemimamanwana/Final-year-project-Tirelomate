@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="css/provider-dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
     <div class="dashboard-container">
@@ -32,12 +33,6 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#" class="nav-link" data-section="lending">
-                            <i class="fas fa-hand-holding-usd"></i>
-                            <span>P2P Lending</span>
-                        </a>
-                    </li>
-                    <li>
                         <a href="#" class="nav-link" data-section="bookings">
                             <i class="fas fa-calendar-check"></i>
                             <span>Bookings</span>
@@ -53,6 +48,18 @@
                         <a href="#" class="nav-link" data-section="profile">
                             <i class="fas fa-user"></i>
                             <span>Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-section="reviews">
+                            <i class="fas fa-star"></i>
+                            <span>Reviews</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-link" data-section="messages">
+                            <i class="fas fa-comments"></i>
+                            <span>Messages</span>
                         </a>
                     </li>
                     <li>
@@ -194,995 +201,6 @@
                 <div class="services-table" id="servicesTable">
                     <!-- Services will be loaded here -->
                 </div>
-            </section>
-
-            <!-- P2P Lending Section (Provider) -->
-            <section id="lending-section" class="content-section">
-                <style>
-         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #ffe6f2 0%, #ffb3d9 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .demo-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .demo-header {
-            background: linear-gradient(135deg, #B20062, #8a004b);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .demo-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .demo-header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .tab-navigation {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e0e0e0;
-            overflow-x: auto;
-        }
-
-        .tab {
-            padding: 15px 30px;
-            cursor: pointer;
-            border: none;
-            background: none;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
-            border-bottom: 3px solid transparent;
-            white-space: nowrap;
-        }
-
-        .tab:hover {
-            background: rgba(178, 0, 98, 0.1);
-        }
-
-        .tab.active {
-            color: #B20062;
-            border-bottom-color: #B20062;
-            background: white;
-        }
-
-        .demo-content {
-            padding: 30px;
-        }
-
-        .screen {
-            display: none;
-            animation: fadeIn 0.3s;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Dashboard Styles */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #ff4d94 0%, #B20062 100%);
-            color: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(178, 0, 98, 0.3);
-        }
-
-        .stat-card h3 {
-            font-size: 2rem;
-            margin-bottom: 5px;
-        }
-
-        .stat-card p {
-            opacity: 0.9;
-            font-size: 0.9rem;
-        }
-
-        /* Wallet Styles */
-        .wallet-display {
-            background: linear-gradient(135deg, #4361ee, #3a0ca3);
-            color: white;
-            padding: 40px;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(67, 97, 238, 0.4);
-        }
-
-        .balance-amount {
-            font-size: 3.5rem;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-
-        .wallet-address {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            font-family: monospace;
-            margin: 20px 0;
-            word-break: break-all;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-primary {
-            background: white;
-            color: #4361ee;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-outline:hover {
-            background: white;
-            color: #4361ee;
-        }
-
-        /* Transaction List */
-        .transaction-list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .transaction-item {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: all 0.3s;
-        }
-
-        .transaction-item:hover {
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            transform: translateX(5px);
-        }
-
-        .tx-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: white;
-        }
-
-        .tx-incoming { background: #4caf50; }
-        .tx-outgoing { background: #f44336; }
-
-        .tx-details {
-            flex: 1;
-        }
-
-        .tx-amount {
-            font-size: 1.3rem;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .tx-meta {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        /* Credit Score */
-        .credit-display {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 40px;
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid #e0e0e0;
-            margin-bottom: 30px;
-        }
-
-        .score-circle {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: conic-gradient(#4caf50 0% 75%, #e0e0e0 75% 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .score-circle::before {
-            content: '';
-            position: absolute;
-            width: 140px;
-            height: 140px;
-            background: white;
-            border-radius: 50%;
-        }
-
-        .score-value {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #B20062;
-            z-index: 1;
-        }
-
-        .score-label {
-            font-size: 0.9rem;
-            color: #666;
-            z-index: 1;
-        }
-
-        .score-factors {
-            display: grid;
-            gap: 15px;
-        }
-
-        .factor-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .factor-bar {
-            width: 200px;
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .factor-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #B20062, #8a004b);
-            border-radius: 4px;
-        }
-
-        /* Loan Cards */
-        .loans-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-        }
-
-        .loan-card {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 15px;
-            padding: 25px;
-            transition: all 0.3s;
-        }
-
-        .loan-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-        }
-
-        .loan-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 20px;
-        }
-
-        .borrower-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff4d94, #B20062);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .risk-badge {
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-
-        .risk-low { background: #e8f5e9; color: #2e7d32; }
-        .risk-medium { background: #fff3e0; color: #ef6c00; }
-        .risk-high { background: #ffebee; color: #c62828; }
-
-        .loan-amount {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #B20062;
-            margin: 15px 0;
-        }
-
-        .loan-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .detail-item {
-            font-size: 0.9rem;
-        }
-
-        .detail-label {
-            color: #666;
-            display: block;
-        }
-
-        .detail-value {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .progress-bar-container {
-            margin: 20px 0;
-        }
-
-        .progress-bar-outer {
-            height: 12px;
-            background: #e0e0e0;
-            border-radius: 6px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .progress-bar-inner {
-            height: 100%;
-            background: linear-gradient(90deg, #4361ee, #3a0ca3);
-            border-radius: 6px;
-            transition: width 0.5s ease;
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: #666;
-        }
-
-        /* QR Code Display */
-        .qr-display {
-            text-align: center;
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .qr-code {
-            width: 300px;
-            height: 300px;
-            margin: 30px auto;
-            background: white;
-            border: 3px solid #4361ee;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: #4361ee;
-        }
-
-        .payment-info {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .stats-grid,
-            .loans-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .credit-display {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .tab {
-                padding: 10px 15px;
-                font-size: 0.9rem;
-            }
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Success Badge */
-        .success-badge {
-            background: #4caf50;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-    </style>
-</head>
-<body>
-    <div class="demo-container">
-        <div class="demo-header">
-            <h1>💫 StellarPesa</h1>
-            <p>Blockchain-Powered Financial Inclusion Platform</p>
-        </div>
-
-        <div class="tab-navigation">
-            <button class="tab active" onclick="showScreen('dashboard')">📊 Dashboard</button>
-            <button class="tab" onclick="showScreen('wallet')">💳 Wallet</button>
-            <button class="tab" onclick="showScreen('credit')">📈 Credit Score</button>
-            <button class="tab" onclick="showScreen('loans')">🤝 P2P Loans</button>
-            <button class="tab" onclick="showScreen('qr')">📱 QR Payment</button>
-            <button class="tab" onclick="showScreen('transactions')">💸 Transactions</button>
-        </div>
-
-        <div class="demo-content">
-            <!-- Dashboard Screen -->
-            <div id="dashboard" class="screen active">
-                <h2 style="margin-bottom: 20px;">Welcome back, Sarah! 👋</h2>
-                
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <p>Wallet Balance</p>
-                        <h3>500.00 XLM</h3>
-                        <p>≈ P2,500.00</p>
-                    </div>
-                    <div class="stat-card">
-                        <p>Credit Score</p>
-                        <h3>750</h3>
-                        <p>Excellent</p>
-                    </div>
-                    <div class="stat-card">
-                        <p>Active Loans</p>
-                        <h3>2</h3>
-                        <p>P700 borrowed</p>
-                    </div>
-                    <div class="stat-card">
-                        <p>Investments</p>
-                        <h3>3</h3>
-                        <p>P1,200 lent</p>
-                    </div>
-                </div>
-
-                <h3 style="margin: 30px 0 15px;">Recent Activity</h3>
-                <div class="transaction-list">
-                    <div class="transaction-item">
-                        <div class="tx-icon tx-incoming">↓</div>
-                        <div class="tx-details">
-                            <div class="tx-amount" style="color: #4caf50;">+50.00 XLM</div>
-                            <div class="tx-meta">Payment received from Mike • 2 hours ago</div>
-                        </div>
-                        <span class="success-badge">✓ Completed</span>
-                    </div>
-                    <div class="transaction-item">
-                        <div class="tx-icon tx-outgoing">↑</div>
-                        <div class="tx-details">
-                            <div class="tx-amount" style="color: #f44336;">-25.00 XLM</div>
-                            <div class="tx-meta">Loan repayment • 5 hours ago</div>
-                        </div>
-                        <span class="success-badge">✓ Completed</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Wallet Screen -->
-            <div id="wallet" class="screen">
-                <div class="wallet-display">
-                    <h2 style="margin-bottom: 10px;">Stellar Wallet</h2>
-                    <p style="opacity: 0.9;">Your blockchain wallet on Stellar Network</p>
-                    
-                    <div class="balance-amount">500.00 XLM</div>
-                    <p style="opacity: 0.8;">≈ P2,500.00 BWP</p>
-                    
-                    <div class="wallet-address">
-                        <strong>Public Address:</strong><br>
-                        GCEXAMPLESTELLARPUBLICKEY123456789ABCDEFGH
-                    </div>
-                    
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" onclick="showScreen('qr')">
-                            📱 Receive
-                        </button>
-                        <button class="btn btn-outline">
-                            ↑ Send
-                        </button>
-                        <button class="btn btn-outline">
-                            📜 History
-                        </button>
-                    </div>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card" style="background: #4caf50;">
-                        <p>Total Received</p>
-                        <h3>1,250 XLM</h3>
-                    </div>
-                    <div class="stat-card" style="background: #f44336;">
-                        <p>Total Sent</p>
-                        <h3>750 XLM</h3>
-                    </div>
-                    <div class="stat-card" style="background: #ff9800;">
-                        <p>Transactions</p>
-                        <h3>47</h3>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Credit Score Screen -->
-            <div id="credit" class="screen">
-                <h2 style="margin-bottom: 20px;">Your Credit Profile</h2>
-                
-                <div class="credit-display">
-                    <div class="score-circle">
-                        <div class="score-value">750</div>
-                        <div class="score-label">Credit Score</div>
-                    </div>
-                    
-                    <div class="score-factors">
-                        <h3 style="color: #4361ee; margin-bottom: 15px;">Excellent Credit</h3>
-                        <p style="color: #666; margin-bottom: 20px;">You qualify for the best loan rates!</p>
-                        
-                        <div class="factor-item">
-                            <div>
-                                <strong>Payment History</strong><br>
-                                <span style="color: #666; font-size: 0.9rem;">100% on-time payments</span>
-                            </div>
-                            <div class="factor-bar">
-                                <div class="factor-fill" style="width: 95%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="factor-item">
-                            <div>
-                                <strong>Transaction Volume</strong><br>
-                                <span style="color: #666; font-size: 0.9rem;">High activity</span>
-                            </div>
-                            <div class="factor-bar">
-                                <div class="factor-fill" style="width: 85%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="factor-item">
-                            <div>
-                                <strong>Credit Utilization</strong><br>
-                                <span style="color: #666; font-size: 0.9rem;">15% of available credit</span>
-                            </div>
-                            <div class="factor-bar">
-                                <div class="factor-fill" style="width: 90%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="factor-item">
-                            <div>
-                                <strong>Account Activity</strong><br>
-                                <span style="color: #666; font-size: 0.9rem;">3 months history</span>
-                            </div>
-                            <div class="factor-bar">
-                                <div class="factor-fill" style="width: 70%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Loans Screen -->
-            <div id="loans" class="screen">
-                <h2 style="margin-bottom: 20px;">P2P Loan Marketplace</h2>
-                <p style="color: #666; margin-bottom: 30px;">Browse and fund community loans, or request your own</p>
-                
-                <div class="action-buttons" style="margin-bottom: 30px;">
-                    <button class="btn btn-primary">🤝 Request Loan</button>
-                    <button class="btn btn-outline">💼 My Loans</button>
-                </div>
-
-                <div class="loans-grid">
-                    <div class="loan-card">
-                        <div class="loan-header">
-                            <div class="borrower-info">
-                                <div class="avatar">D</div>
-                                <div>
-                                    <strong>David Borrower</strong><br>
-                                    <span style="color: #666; font-size: 0.85rem;">Credit: 680</span>
-                                </div>
-                            </div>
-                            <span class="risk-badge risk-low">LOW RISK</span>
-                        </div>
-                        
-                        <div class="loan-amount">P500.00</div>
-                        <p style="color: #666; margin-bottom: 15px;">Business expansion for small shop</p>
-                        
-                        <div class="loan-details">
-                            <div class="detail-item">
-                                <span class="detail-label">Interest Rate</span><br>
-                                <span class="detail-value">8.0%</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Term</span><br>
-                                <span class="detail-value">6 months</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Monthly Payment</span><br>
-                                <span class="detail-value">P86.60</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Risk Score</span><br>
-                                <span class="detail-value">25/100</span>
-                            </div>
-                        </div>
-                        
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-outer">
-                                <div class="progress-bar-inner" style="width: 60%"></div>
-                            </div>
-                            <div class="progress-info">
-                                <span>P300 funded</span>
-                                <span>60%</span>
-                            </div>
-                        </div>
-                        
-                        <button class="btn btn-primary" style="width: 100%;">💰 Fund This Loan</button>
-                    </div>
-
-                    <div class="loan-card">
-                        <div class="loan-header">
-                            <div class="borrower-info">
-                                <div class="avatar">E</div>
-                                <div>
-                                    <strong>Emma Student</strong><br>
-                                    <span style="color: #666; font-size: 0.85rem;">Credit: 720</span>
-                                </div>
-                            </div>
-                            <span class="risk-badge risk-low">LOW RISK</span>
-                        </div>
-                        
-                        <div class="loan-amount">P300.00</div>
-                        <p style="color: #666; margin-bottom: 15px;">Education fees for university</p>
-                        
-                        <div class="loan-details">
-                            <div class="detail-item">
-                                <span class="detail-label">Interest Rate</span><br>
-                                <span class="detail-value">6.0%</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Term</span><br>
-                                <span class="detail-value">12 months</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Monthly Payment</span><br>
-                                <span class="detail-value">P25.85</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Risk Score</span><br>
-                                <span class="detail-value">15/100</span>
-                            </div>
-                        </div>
-                        
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-outer">
-                                <div class="progress-bar-inner" style="width: 85%"></div>
-                            </div>
-                            <div class="progress-info">
-                                <span>P255 funded</span>
-                                <span>85%</span>
-                            </div>
-                        </div>
-                        
-                        <button class="btn btn-primary" style="width: 100%;">💰 Fund This Loan</button>
-                    </div>
-
-                    <div class="loan-card">
-                        <div class="loan-header">
-                            <div class="borrower-info">
-                                <div class="avatar">J</div>
-                                <div>
-                                    <strong>John Farmer</strong><br>
-                                    <span style="color: #666; font-size: 0.85rem;">Credit: 620</span>
-                                </div>
-                            </div>
-                            <span class="risk-badge risk-medium">MEDIUM RISK</span>
-                        </div>
-                        
-                        <div class="loan-amount">P200.00</div>
-                        <p style="color: #666; margin-bottom: 15px;">Farm equipment repair</p>
-                        
-                        <div class="loan-details">
-                            <div class="detail-item">
-                                <span class="detail-label">Interest Rate</span><br>
-                                <span class="detail-value">10.0%</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Term</span><br>
-                                <span class="detail-value">3 months</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Monthly Payment</span><br>
-                                <span class="detail-value">P69.03</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Risk Score</span><br>
-                                <span class="detail-value">35/100</span>
-                            </div>
-                        </div>
-                        
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-outer">
-                                <div class="progress-bar-inner" style="width: 20%"></div>
-                            </div>
-                            <div class="progress-info">
-                                <span>P40 funded</span>
-                                <span>20%</span>
-                            </div>
-                        </div>
-                        
-                        <button class="btn btn-primary" style="width: 100%;">💰 Fund This Loan</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- QR Payment Screen -->
-            <div id="qr" class="screen">
-                <h2 style="text-align: center; margin-bottom: 30px;">Receive Payment via QR Code</h2>
-                
-                <div class="qr-display">
-                    <p style="color: #666; margin-bottom: 20px;">Scan this QR code to send payment</p>
-                    
-                    <div class="qr-code">
-                        <div style="text-align: center;">
-                            <div style="font-size: 4rem; margin-bottom: 10px;">📱</div>
-                            <div style="font-size: 1rem;">QR Code</div>
-                            <div style="font-size: 0.8rem; opacity: 0.7;">Blockchain Payment</div>
-                        </div>
-                    </div>
-                    
-                    <div class="payment-info">
-                        <h3 style="color: #4361ee; margin-bottom: 15px;">Payment Request</h3>
-                        <div style="display: grid; gap: 10px;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #666;">Amount:</span>
-                                <strong style="font-size: 1.2rem; color: #4361ee;">50.00 XLM</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #666;">Description:</span>
-                                <strong>Service Payment</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #666;">Expires:</span>
-                                <strong>30 minutes</strong>
-                            </div>
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: #666;">Payment ID:</span>
-                                <strong style="font-family: monospace; font-size: 0.8rem;">pay_a1b2c3d4</strong>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="action-buttons" style="justify-content: center; margin-top: 20px;">
-                        <button class="btn btn-primary">📋 Copy Payment Link</button>
-                        <button class="btn btn-outline">↻ Generate New QR</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Transactions Screen -->
-            <div id="transactions" class="screen">
-                <h2 style="margin-bottom: 20px;">Transaction History</h2>
-                <p style="color: #666; margin-bottom: 30px;">All your blockchain transactions on Stellar Network</p>
-                
-                <div class="transaction-list">
-                    <div class="transaction-item">
-                        <div class="tx-icon tx-incoming">↓</div>
-                        <div class="tx-details">
-                            <div class="tx-amount" style="color: #4caf50;">+50.00 XLM</div>
-                            <div class="tx-meta">
-                                From: GCMIKE...LENDER<br>
-                                <span style="font-family: monospace; font-size: 0.75rem; color: #999;">
-                                    TX: a1b2c3d4e5f6...xyz789
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="success-badge">✓ Confirmed</span>
-                            <div style="color: #666; font-size: 0.85rem; margin-top: 5px;">2 hours ago</div>
-                        </div>
-                    </div>
-
-                    <div class="transaction-item">
-                        <div class="tx-icon tx-outgoing">↑</div>
-                        <div class="tx-details">
-                            <div class="tx-amount" style="color: #f44336;">-25.00 XLM</div>
-                            <div class="tx-meta">
-                                To: GCJOHN...BORROW<br>
-                                <span style="font-family: monospace; font-size: 0.75rem; color: #999;">
-                                    TX: f1e2d3c4b5a6...abc123
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="success-badge">✓ Confirmed</span>
-                            <div style="color: #666; font-size: 0.85rem; margin-top: 5px;">5 hours ago</div>
-                        </div>
-                    </div>
-
-                    <div class="transaction-item">
-                        <div class="tx-icon tx-incoming">↓</div>
-                        <div class="tx-details">
-                            <div class="tx-amount" style="color: #4caf50;">+100.00 XLM</div>
-                            <div class="tx-meta">
-                                From: GCEMMA...INVEST<br>
-                                <span style="font-family: monospace; font-size: 0.75rem; color: #999;">
-                                    TX: x9y8z7w6v5u4...mno456
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="success-badge">✓ Confirmed</span>
-                            <div style="color: #666; font-size: 0.85rem; margin-top: 5px;">1 day ago</div>
-                        </div>
-                    </div>
-
-                    <div class="transaction-item">
-                        <div class="tx-icon tx-outgoing">↑</div>
-                        <div class="tx-details">
-                            <div class="tx-amount" style="color: #f44336;">-75.00 XLM</div>
-                            <div class="tx-meta">
-                                To: GCDAVID...BORROW<br>
-                                <span style="font-family: monospace; font-size: 0.75rem; color: #999;">
-                                    TX: p0o9i8u7y6t5...def789
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="success-badge">✓ Confirmed</span>
-                            <div style="color: #666; font-size: 0.85rem; margin-top: 5px;">2 days ago</div>
-                        </div>
-                    </div>
-
-                    <div class="transaction-item">
-                        <div class="tx-icon tx-incoming">↓</div>
-                        <div class="tx-details">
-                            <div class="tx-amount" style="color: #4caf50;">+200.00 XLM</div>
-                            <div class="tx-meta">
-                                From: Stellar Friendbot (Testnet Funding)<br>
-                                <span style="font-family: monospace; font-size: 0.75rem; color: #999;">
-                                    TX: init_wallet_fund...001
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="success-badge">✓ Confirmed</span>
-                            <div style="color: #666; font-size: 0.85rem; margin-top: 5px;">1 week ago</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function showScreen(screenId) {
-            // Hide all screens
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
-            
-            // Remove active class from all tabs
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Show selected screen
-            document.getElementById(screenId).classList.add('active');
-            
-            // Activate corresponding tab
-            event.target.classList.add('active');
-        }
-
-        // Animate progress bars when loans screen is shown
-        document.addEventListener('DOMContentLoaded', () => {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.width = entry.target.getAttribute('data-width') || entry.target.style.width;
-                    }
-                });
-            });
-
-            document.querySelectorAll('.progress-bar-inner').forEach(bar => {
-                observer.observe(bar);
-            });
-        });
-    </script>
-
             </section>
 
             <!-- Bookings Section -->
@@ -1420,6 +438,59 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Reviews Section -->
+            <section id="reviews-section" class="content-section">
+                <div class="section-header">
+                    <h2>Customer Reviews</h2>
+                    <p>See what your customers are saying</p>
+                </div>
+                <div id="providerRatingSummary" style="display:flex;align-items:center;gap:16px;padding:16px 0;margin-bottom:16px;">
+                    <div style="font-size:2.5rem;font-weight:700;color:#333;" id="providerAvgRating">--</div>
+                    <div>
+                        <div id="providerAvgStars" style="font-size:1.3rem;color:#f5a623;"></div>
+                        <div id="providerReviewCount" style="color:#888;font-size:0.9rem;">Loading...</div>
+                    </div>
+                </div>
+                <div id="providerReviewsList">
+                    <div class="empty-state" style="padding:40px;text-align:center;color:#999;">
+                        <i class="fas fa-star" style="font-size:2rem;margin-bottom:8px;"></i>
+                        <p>No reviews yet</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Messages Section -->
+            <section id="messages-section" class="content-section">
+                <div class="section-header">
+                    <h2>Messages</h2>
+                    <p>Chat with your customers</p>
+                </div>
+                <div class="messages-container" style="display:flex;gap:0;height:calc(100vh - 200px);border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;background:#fff;">
+                    <div id="conversationsList" style="width:300px;min-width:260px;border-right:1px solid #e0e0e0;overflow-y:auto;background:#fafafa;">
+                        <div style="padding:16px;border-bottom:1px solid #e0e0e0;font-weight:700;font-size:1rem;">Conversations</div>
+                        <div id="convoListItems" style="padding:0;">
+                            <div class="empty-state" style="padding:40px 16px;text-align:center;color:#999;">
+                                <i class="fas fa-comments" style="font-size:2rem;margin-bottom:8px;"></i>
+                                <p>No conversations yet</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="chatPanel" style="flex:1;display:flex;flex-direction:column;">
+                        <div id="chatHeader" style="padding:14px 20px;border-bottom:1px solid #e0e0e0;font-weight:600;background:#fff;display:flex;align-items:center;gap:10px;">
+                            <span id="chatWithName" style="color:#999;">Select a conversation</span>
+                        </div>
+                        <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;">
+                        </div>
+                        <div id="chatInputArea" style="padding:12px 16px;border-top:1px solid #e0e0e0;display:none;align-items:center;gap:8px;">
+                            <input type="text" id="chatMessageInput" placeholder="Type a message..." style="flex:1;padding:10px 14px;border:1px solid #ddd;border-radius:20px;font-size:0.95rem;outline:none;">
+                            <button id="chatSendBtn" class="primary-btn" style="border-radius:50%;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -1490,6 +561,20 @@
                     </div>
                 </div>
                 
+                <div class="form-group">
+                    <label for="serviceLocationAddress">Location Address (optional)</label>
+                    <input type="text" id="serviceLocationAddress" placeholder="e.g., Broadhurst, Gaborone">
+                </div>
+
+                <div class="form-group">
+                    <label>Service Location (drag marker to set)</label>
+                    <button type="button" id="useMyLocationBtn" class="primary-btn" style="margin-bottom:10px;background:#28a745;">
+                        <i class="fas fa-location-arrow"></i>
+                        Use My Current Location
+                    </button>
+                    <div id="serviceLocationMap" style="height:300px;z-index:9999;border-radius:8px;border:1px solid #ddd;"></div>
+                </div>
+
                 <button type="submit" class="primary-btn">
                     <i class="fas fa-check"></i>
                     Create Service
@@ -1509,6 +594,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/api.js"></script>
     <script src="js/provider-dashboard.js"></script>
