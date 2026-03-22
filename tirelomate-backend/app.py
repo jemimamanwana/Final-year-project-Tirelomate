@@ -8,6 +8,7 @@ from routes.bookings import bookings_bp
 from routes.provider import provider_bp
 from routes.reviews import reviews_bp
 from routes.messages import messages_bp
+from routes.payments import payments_bp
 
 
 def create_app():
@@ -25,6 +26,7 @@ def create_app():
     app.register_blueprint(provider_bp)
     app.register_blueprint(reviews_bp)
     app.register_blueprint(messages_bp)
+    app.register_blueprint(payments_bp)
 
     @app.route("/")
     def health():

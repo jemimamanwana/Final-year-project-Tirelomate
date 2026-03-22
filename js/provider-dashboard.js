@@ -1,67 +1,55 @@
-// Provider Dashboard JavaScript - ServiceHub
-async function loadWalletBalance() {
-    const token = localStorage.getItem("token"); // stored on login
-    if (!token) {
-      console.error("No token found.");
-      return;
-    }
-  
-    try {
-      const res = await fetch("http://localhost:5000/api/wallet/balance", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
-      const data = await res.json();
-  
-      if (res.ok) {
-        document.getElementById("wallet-address").textContent = data.public_key;
-        document.getElementById("wallet-balance").textContent = `${data.balance.toFixed(2)} XLM`;
-      } else {
-        document.getElementById("wallet-balance").textContent = "Error loading balance";
-        console.error(data);
-      }
-    } catch (err) {
-      console.error("Network error:", err);
-    }
-  }
-  
-  window.addEventListener("load", loadWalletBalance);
-  
+// Provider Dashboard JavaScript - TireloMate
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit for the API to be loaded
-    setTimeout(async () => {
-        try {
-            // Check if user is authenticated
-            if (!window.auth || !window.auth.isLoggedIn()) {
-                // User is not logged in, redirect to login
-                window.location.href = 'index.html';
-                return;
-            }
-            
-            // Check the actual user type; only redirect if we are CERTAIN user is not a provider
-            const currentUser = await window.auth.getCurrentUser();
-            if (currentUser && currentUser.user_type !== 'provider') {
-                // User is not a provider, redirect to customer dashboard
-                if (!window.location.pathname.includes('dashboard.html')) {
-                    window.location.href = 'dashboard.html';
-                    return;
+    // --- PHASE 1: Set up UI handlers immediately (no API needed) ---
+    initializeDashboard();
+    setupNavigation();
+    setupModals();
+    setupEventListeners();
+
+    // Logout must always work, even if everything else fails
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    await window.auth.logout();
+                } catch (err) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('currentProvider');
+                    window.location.href = 'index.html';
                 }
             }
-            
-            // Initialize dashboard
-            initializeDashboard();
-            setupNavigation();
-            setupModals();
-            loadUserData();
-            loadDashboardData();
-            setupEventListeners();
-        } catch (error) {
-            console.error('Authentication check failed:', error);
-            // Don't redirect on error to prevent blinking loops; show a message instead
-            try { showNotification('Unable to verify session. Please refresh.', 'error'); } catch (_) {}
+        });
+    }
+
+    // --- PHASE 2: Auth check + data loading (async, may fail) ---
+    setTimeout(async () => {
+        // Check if user is authenticated (token in localStorage)
+        if (!window.auth || !window.auth.isLoggedIn()) {
+            window.location.href = 'index.html';
+            return;
         }
+
+        // Redirect non-providers to customer dashboard
+        try {
+            const user = await window.auth.getCurrentUser();
+            if (!user || user.user_type !== 'provider') {
+                window.location.replace('dashboard.html');
+                return;
+            }
+        } catch (e) {
+            console.warn('Could not verify provider role, redirecting to customer dashboard:', e.message);
+            window.location.replace('dashboard.html');
+            return;
+        }
+
+        // Load data — each call is independent
+        try { loadUserData(); } catch (e) { console.warn('loadUserData failed:', e.message); }
+
+        loadDashboardData();
     }, 100);
 });
 
@@ -81,149 +69,25 @@ let currentServices = [];
 let currentBookings = [];
 let activeTab = 'upcoming';
 let knownUpcomingBookingIds = new Set();
-let currentGoods = [];
-// (reverted) removed provider lending demo
 
-// Sample data - in a real app, this would come from the API
-const sampleServices = [
-    {
-        id: 1,
-        title: 'Professional Home Cleaning',
-        description: 'Thorough cleaning of your entire home by experienced professionals.',
-        category: 'home',
-        price: 120,
-        duration: '2-3 hours',
-        rating: 4.8,
-        bookings: 42,
-        status: 'active',
-        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&auto=format'
-    },
-    {
-        id: 2,
-        title: 'Deep Carpet Cleaning',
-        description: 'Specialized carpet cleaning using eco-friendly products.',
-        category: 'home',
-        price: 150,
-        duration: '2-4 hours',
-        rating: 4.7,
-        bookings: 28,
-        status: 'active',
-        image: 'https://images.unsplash.com/photo-1598300042247-d088f8ab3a91?w=600&auto=format'
-    }
-];
+// Data arrays – populated from API only (no demo data)
+let sampleServices = [];
+let sampleBookings = [];
+let sampleTransactions = [];
 
-const sampleBookings = [
-    {
-        id: 1,
-        serviceId: 1,
-        serviceName: 'Professional Home Cleaning',
-        clientName: 'John Doe',
-        clientAvatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-        date: '2024-03-20',
-        time: '10:00',
-        status: 'upcoming',
-        price: 120,
-        notes: 'Please focus on kitchen and bathrooms'
-    },
-    {
-        id: 2,
-        serviceId: 1,
-        serviceName: 'Professional Home Cleaning',
-        clientName: 'Emily Smith',
-        clientAvatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-        date: '2024-03-18',
-        time: '14:00',
-        status: 'completed',
-        price: 120,
-        notes: 'Pet-friendly cleaning products please'
-    },
-    {
-        id: 3,
-        serviceId: 2,
-        serviceName: 'Deep Carpet Cleaning',
-        clientName: 'Michael Brown',
-        clientAvatar: 'https://randomuser.me/api/portraits/men/45.jpg',
-        date: '2024-03-15',
-        time: '11:00',
-        status: 'completed',
-        price: 150,
-        notes: 'Living room and hallway only'
-    }
-];
-
-const sampleTransactions = [
-    {
-        id: 1,
-        service: 'Professional Home Cleaning',
-        date: 'March 18, 2024',
-        amount: 120,
-        status: 'completed',
-        client: 'Emily Smith'
-    },
-    {
-        id: 2,
-        service: 'Deep Carpet Cleaning',
-        date: 'March 15, 2024',
-        amount: 150,
-        status: 'completed',
-        client: 'Michael Brown'
-    },
-    {
-        id: 3,
-        service: 'Professional Home Cleaning',
-        date: 'March 10, 2024',
-        amount: 120,
-        status: 'completed',
-        client: 'Robert Johnson'
-    }
-];
-
-// Sample goods (AI-generated images via picsum/photos & unsplash)
-const sampleGoods = [
-    {
-        id: 101,
-        title: 'Eco Multi-Surface Cleaner',
-        description: 'Plant-based formula for streak-free shine on most surfaces.',
-        price: 14.99,
-        stock: 64,
-        image: 'https://images.unsplash.com/photo-1587017539504-67cfbddac569?w=800&auto=format&fit=crop'
-    },
-    {
-        id: 102,
-        title: 'Microfiber Towel Pack (5)',
-        description: 'Ultra-soft, lint-free towels safe for delicate finishes.',
-        price: 11.50,
-        stock: 150,
-        image: 'https://images.unsplash.com/photo-1595433707802-6b2626ef95b9?w=800&auto=format&fit=crop'
-    },
-    {
-        id: 103,
-        title: 'Heavy-Duty Scrub Brush',
-        description: 'Ergonomic grip with durable bristles for deep cleaning.',
-        price: 8.25,
-        stock: 89,
-        image: 'https://images.unsplash.com/photo-1563453392212-326f5e854473?w=800&auto=format&fit=crop'
-    },
-    {
-        id: 104,
-        title: 'Natural Air Freshener',
-        description: 'Non-toxic essential oil blend for long-lasting freshness.',
-        price: 9.75,
-        stock: 120,
-        image: 'https://images.unsplash.com/photo-1592945403244-b3fb9b1b1eb8?w=800&auto=format&fit=crop'
-    }
-];
-
-// Initialize dashboard
+// Initialize dashboard — show the dashboard section visually without triggering API calls
 function initializeDashboard() {
-    // Load user data from localStorage or API
+    // Load user data from localStorage
     const storedUser = localStorage.getItem('currentProvider');
     if (storedUser) {
         currentUser = JSON.parse(storedUser);
     }
-    
+
     updateUserDisplay();
-    showSection('dashboard');
+
+    // Show dashboard section directly (no API call yet — that happens in Phase 2)
+    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+    document.getElementById('dashboard-section')?.classList.add('active');
 }
 
 // Load user data from API
@@ -257,7 +121,7 @@ async function loadUserData() {
         }
     } catch (error) {
         console.error('Error loading user data:', error);
-        showNotification('Failed to load user data. Please refresh the page.', 'error');
+        console.warn('Failed to load user data:', error.message);
         
         // Set fallback data
         currentUser.name = 'User';
@@ -334,9 +198,6 @@ function showSection(sectionName) {
         case 'services':
             loadServices();
             break;
-        case 'goods':
-            loadGoods();
-            break;
         case 'bookings':
             loadBookings();
             break;
@@ -346,56 +207,79 @@ function showSection(sectionName) {
         case 'profile':
             // Profile is already loaded
             break;
+        case 'reviews':
+            loadProviderReviews();
+            break;
+        case 'messages':
+            loadConversations();
+            _startMessagePolling();
+            break;
         case 'support':
             // Support section is static
             break;
     }
+    if (sectionName !== 'messages') _stopMessagePolling();
 }
 
-// Load dashboard data
+// Load dashboard data by computing stats from real endpoints
 async function loadDashboardData() {
     try {
-        // Fetch provider dashboard stats from API
-        const stats = await window.api.request('/provider/dashboard/stats');
-        
-        // Update stats with real data
-        document.getElementById('upcomingBookingsCount').textContent = stats.pending_bookings || 0;
-        document.getElementById('monthlyEarnings').textContent = `P${stats.total_earnings || 0}`;
-        document.getElementById('averageRating').textContent = stats.average_rating ? stats.average_rating.toFixed(1) : '0.0';
-        document.getElementById('totalClients').textContent = stats.completed_bookings || 0;
-        
-        // Fetch recent bookings
-        const recentBookings = await window.api.request('/provider/dashboard/recent-bookings?limit=3');
-        renderRecentBookings(recentBookings);
-        
-        // Initialize charts with real data
+        // Fetch all bookings for this provider
+        const allBookings = await window.api.getProviderBookings('all');
+        const bookings = Array.isArray(allBookings) ? allBookings : [];
+
+        // Compute stats from bookings
+        const pending = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
+        const completed = bookings.filter(b => b.status === 'completed');
+        const totalEarnings = completed.reduce((sum, b) => sum + (parseFloat(b.service_price || b.price || b.total_price || 0)), 0);
+
+        document.getElementById('upcomingBookingsCount').textContent = pending.length;
+        document.getElementById('monthlyEarnings').textContent = `P${totalEarnings}`;
+        document.getElementById('totalClients').textContent = completed.length;
+
+        // Fetch provider rating
+        try {
+            const user = await window.auth.getCurrentUser();
+            if (user) {
+                const rating = await api.getProviderRating(user.id);
+                document.getElementById('averageRating').textContent = rating.average_rating ? rating.average_rating.toFixed(1) : '0.0';
+            }
+        } catch (_) {
+            document.getElementById('averageRating').textContent = '0.0';
+        }
+
+        // Recent bookings = first 3
+        const recent = bookings.slice(0, 3).map(b => ({
+            serviceName: b.service_title || 'Service',
+            clientName: b.customer_name || 'Client',
+            clientAvatar: b.customer_avatar || 'https://via.placeholder.com/40?text=C',
+            date: b.date,
+            time: b.time,
+            status: b.status
+        }));
+        renderRecentBookings(recent);
+
         initializeEarningsChart();
-        
+
     } catch (error) {
-        console.error('Error loading dashboard data:', error);
-        
-        // Fallback to demo data if API fails
-        const upcomingBookings = sampleBookings.filter(b => b.status === 'upcoming').length;
-        const monthlyEarnings = sampleBookings
-            .filter(b => b.status === 'completed')
-            .reduce((sum, booking) => sum + booking.price, 0);
-        
-        document.getElementById('upcomingBookingsCount').textContent = upcomingBookings;
-        document.getElementById('monthlyEarnings').textContent = `P${monthlyEarnings}`;
-        document.getElementById('averageRating').textContent = '4.8';
-        document.getElementById('totalClients').textContent = sampleBookings.length;
-        
-        renderRecentBookings(sampleBookings.slice(0, 3));
+        console.warn('Could not load dashboard data:', error.message);
+
+        document.getElementById('upcomingBookingsCount').textContent = '0';
+        document.getElementById('monthlyEarnings').textContent = 'P0';
+        document.getElementById('averageRating').textContent = '0.0';
+        document.getElementById('totalClients').textContent = '0';
+
+        renderRecentBookings([]);
         initializeEarningsChart();
     }
 }
 
-// Load services (prefer API, fall back to demo)
+// Load services from /api/provider/services
 async function loadServices() {
+    if (!currentServices.length) showLoading('servicesTable');
     try {
         if (window.auth && window.auth.isLoggedIn()) {
-            // Use the new provider dashboard services endpoint
-            const apiServices = await window.api.request('/provider/dashboard/services');
+            const apiServices = await window.api.getProviderServices();
             if (Array.isArray(apiServices)) {
                 currentServices = apiServices.map(s => ({
                     id: s.id,
@@ -403,11 +287,11 @@ async function loadServices() {
                     description: s.description || '',
                     category: s.category || 'other',
                     price: s.price,
-                    duration: s.duration || '',
-                    rating: s.average_rating || 0,
-                    bookings: s.booking_count || 0,
-                    reviews: s.review_count || 0,
-                    status: s.status || 'active',
+                    duration: s.duration_estimate || '',
+                    rating: 0,
+                    bookings: 0,
+                    reviews: 0,
+                    status: s.is_active === false ? 'inactive' : 'active',
                     image: s.image || 'https://via.placeholder.com/80?text=Service'
                 }));
                 renderServices(currentServices);
@@ -415,11 +299,11 @@ async function loadServices() {
             }
         }
     } catch (error) {
-        console.warn('Failed to load services from API, using demo data:', error.message);
+        console.warn('Could not load services:', error.message);
     }
-    
-    // Fallback to demo data
-    currentServices = sampleServices;
+
+    // No data – show empty state
+    currentServices = [];
     renderServices(currentServices);
 }
 
@@ -474,7 +358,7 @@ function renderServices(services) {
                             </div>
                         </td>
                         <td>${service.category.charAt(0).toUpperCase() + service.category.slice(1)}</td>
-                        <td>$${service.price}</td>
+                        <td>P${service.price}</td>
                         <td>${service.bookings}</td>
                         <td>
                             <div class="rating">
@@ -515,92 +399,9 @@ function renderServices(services) {
     });
 }
 
-// Load goods (demo with search filter)
-async function loadGoods() {
-    try {
-        // If there is an API in future: prefer it here
-        // const apiGoods = await window.api.getProviderGoods?.();
-        // if (Array.isArray(apiGoods)) { currentGoods = apiGoods; renderGoods(currentGoods); return; }
-    } catch (error) {
-        console.warn('Failed to load goods from API, using demo data:', error.message);
-    }
-
-    const queryInput = document.getElementById('goodsSearch');
-    const query = (queryInput?.value || '').trim().toLowerCase();
-    const data = sampleGoods.filter(g =>
-        !query || g.title.toLowerCase().includes(query) || g.description.toLowerCase().includes(query)
-    );
-    currentGoods = data;
-    renderGoods(currentGoods);
-}
-
-// Render goods grid
-function renderGoods(goods) {
-    const grid = document.getElementById('goodsGrid');
-    if (!grid) return;
-
-    if (goods.length === 0) {
-        grid.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-box-open"></i>
-                <h3>No goods found</h3>
-                <p>Add your first product to start selling</p>
-            </div>
-        `;
-        return;
-    }
-
-    grid.innerHTML = goods.map(g => `
-        <div class="good-card">
-            <img class="good-image" src="${g.image}" alt="${g.title}">
-            <div class="good-content">
-                <div class="good-title">${g.title}</div>
-                <div class="good-desc">${g.description}</div>
-                <div class="good-meta">
-                    <div class="good-price">$${g.price.toFixed(2)}</div>
-                    <div class="good-stock">Stock: ${g.stock}</div>
-                </div>
-                <div class="good-actions">
-                    <button class="outline-btn edit-good-btn" data-good-id="${g.id}"><i class="fas fa-edit"></i> Edit</button>
-                    <button class="outline-btn delete-good-btn" data-good-id="${g.id}"><i class="fas fa-trash"></i> Delete</button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-
-    document.querySelectorAll('.edit-good-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = parseInt(e.currentTarget.getAttribute('data-good-id'));
-            editGood(id);
-        });
-    });
-    document.querySelectorAll('.delete-good-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = parseInt(e.currentTarget.getAttribute('data-good-id'));
-            deleteGood(id);
-        });
-    });
-}
-
-function editGood(goodId) {
-    const good = sampleGoods.find(g => g.id === goodId);
-    if (!good) return;
-    showNotification('Edit good functionality would be implemented here', 'info');
-}
-
-function deleteGood(goodId) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        const index = sampleGoods.findIndex(g => g.id === goodId);
-        if (index !== -1) {
-            sampleGoods.splice(index, 1);
-            loadGoods();
-            showNotification('Product deleted', 'success');
-        }
-    }
-}
-
-// Load bookings (prefer API, fall back to demo)
+// Load bookings from API
 async function loadBookings() {
+    if (!currentBookings.length) showLoading('bookingsTable');
     try {
         if (window.auth && window.auth.isLoggedIn()) {
             // Map API bookings to UI shape
@@ -608,13 +409,14 @@ async function loadBookings() {
             if (Array.isArray(apiBookings)) {
                 const mapped = apiBookings.map(b => ({
                     id: b.id,
+                    customer_id: b.customer_id,
                     serviceName: b.service_title || 'Service',
                     clientName: b.customer_name || 'Client',
                     clientAvatar: b.customer_avatar || 'https://via.placeholder.com/40?text=C',
                     date: b.date,
                     time: b.time,
                     status: b.status,
-                    price: b.price || 0
+                    price: b.service_price || b.total_price || b.price || 0
                 }));
                 // Detect new upcoming bookings and notify
                 if (activeTab === 'upcoming') {
@@ -634,14 +436,11 @@ async function loadBookings() {
         }
     } catch (error) {
         console.warn('Failed to load provider bookings from API:', error.message);
+        console.warn('Could not load bookings:', error.message);
     }
 
-    // Fallback to demo data
-    let filteredBookings = sampleBookings;
-    if (activeTab !== 'all') {
-        filteredBookings = sampleBookings.filter(booking => booking.status === activeTab);
-    }
-    currentBookings = filteredBookings;
+    // No demo data – show empty state
+    currentBookings = [];
     renderBookings(currentBookings);
 }
 
@@ -698,7 +497,7 @@ function renderBookings(bookings) {
                             ${new Date(booking.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             at ${booking.time}
                         </td>
-                        <td>$${booking.price}</td>
+                        <td>P${booking.price}</td>
                         <td>
                             <span class="status-badge ${booking.status}">${booking.status}</span>
                         </td>
@@ -706,11 +505,21 @@ function renderBookings(bookings) {
                             <button class="action-btn view-booking-btn" data-booking-id="${booking.id}">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            ${booking.status === 'upcoming' ? `
-                                <button class="action-btn complete-booking-btn" data-booking-id="${booking.id}">
+                            ${booking.customer_id ? `
+                                <button class="action-btn" title="Message Customer" onclick="openMessageWithUser('${booking.customer_id}', '${(booking.clientName || '').replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-comment-dots" style="color:#6c63ff;"></i>
+                                </button>
+                            ` : ''}
+                            ${booking.status === 'pending' ? `
+                                <button class="action-btn confirm-booking-btn" data-booking-id="${booking.id}" title="Accept">
+                                    <i class="fas fa-check-circle" style="color:#28a745;"></i>
+                                </button>
+                            ` : ''}
+                            ${booking.status === 'pending' || booking.status === 'confirmed' || booking.status === 'upcoming' ? `
+                                <button class="action-btn complete-booking-btn" data-booking-id="${booking.id}" title="Complete">
                                     <i class="fas fa-check"></i>
                                 </button>
-                                <button class="action-btn cancel-booking-btn" data-booking-id="${booking.id}">
+                                <button class="action-btn cancel-booking-btn" data-booking-id="${booking.id}" title="Cancel">
                                     <i class="fas fa-times"></i>
                                 </button>
                             ` : ''}
@@ -724,21 +533,28 @@ function renderBookings(bookings) {
     // Add event listeners for booking actions
     document.querySelectorAll('.view-booking-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const bookingId = parseInt(e.currentTarget.getAttribute('data-booking-id'));
+            const bookingId = e.currentTarget.getAttribute('data-booking-id');
             viewBookingDetails(bookingId);
         });
     });
-    
+
+    document.querySelectorAll('.confirm-booking-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const bookingId = e.currentTarget.getAttribute('data-booking-id');
+            confirmBooking(bookingId);
+        });
+    });
+
     document.querySelectorAll('.complete-booking-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const bookingId = parseInt(e.currentTarget.getAttribute('data-booking-id'));
+            const bookingId = e.currentTarget.getAttribute('data-booking-id');
             completeBooking(bookingId);
         });
     });
-    
+
     document.querySelectorAll('.cancel-booking-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const bookingId = parseInt(e.currentTarget.getAttribute('data-booking-id'));
+            const bookingId = e.currentTarget.getAttribute('data-booking-id');
             cancelBooking(bookingId);
         });
     });
@@ -794,36 +610,43 @@ function renderRecentBookings(bookings) {
     `;
 }
 
-// Load earnings data
+// Load earnings data from completed bookings
 async function loadEarnings() {
+    showLoading('transactionsList');
     try {
-        // Fetch earnings data from API
-        const earningsData = await window.api.request('/provider/dashboard/earnings');
-        
-        if (Array.isArray(earningsData) && earningsData.length > 0) {
-            // Update total earnings with real data
-            const totalEarnings = earningsData.reduce((sum, month) => sum + (month.earnings || 0), 0);
-            document.getElementById('totalEarningsAmount').textContent = `P${totalEarnings.toLocaleString()}`;
-            
-            // Update earnings breakdown chart with real data
-            initializeEarningsBreakdownChart(earningsData);
-            
-            // Update transactions list with real data (you might need another endpoint for this)
-            // For now, we'll keep the sample transactions
-            renderTransactionsList(sampleTransactions);
-            
-            return;
-        }
+        const allBookings = await window.api.getProviderBookings('all');
+        const bookings = Array.isArray(allBookings) ? allBookings : [];
+        const completed = bookings.filter(b => b.status === 'completed');
+        const totalEarnings = completed.reduce((sum, b) => sum + (parseFloat(b.service_price || b.price || b.total_price || 0)), 0);
+
+        document.getElementById('totalEarningsAmount').textContent = `P${totalEarnings.toLocaleString()}`;
+
+        // Update earnings sub-stats
+        const cancelled = bookings.filter(b => b.status === 'cancelled');
+        const completedJobsEl = document.getElementById('completedJobsCount');
+        const avgPerJobEl = document.getElementById('avgPerJob');
+        const cancellationRateEl = document.getElementById('cancellationRate');
+        if (completedJobsEl) completedJobsEl.textContent = completed.length;
+        if (avgPerJobEl) avgPerJobEl.textContent = completed.length ? `P${(totalEarnings / completed.length).toFixed(2)}` : 'P0';
+        if (cancellationRateEl) cancellationRateEl.textContent = bookings.length ? `${Math.round((cancelled.length / bookings.length) * 100)}%` : '0%';
+
+        initializeEarningsBreakdownChart();
+
+        // Show completed bookings as transactions
+        const transactions = completed.map(b => ({
+            service: b.service_title || 'Service',
+            client: b.customer_name || 'Client',
+            amount: parseFloat(b.service_price || b.price || b.total_price || 0),
+            date: b.date ? new Date(b.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+            status: 'completed'
+        }));
+        renderTransactions(transactions);
     } catch (error) {
-        console.error('Error loading earnings data:', error);
+        console.warn('Could not load earnings data:', error.message);
+        document.getElementById('totalEarningsAmount').textContent = 'P0';
+        initializeEarningsBreakdownChart();
+        renderTransactions([]);
     }
-    
-    // Fallback to demo data
-    const totalEarnings = sampleTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-    document.getElementById('totalEarningsAmount').textContent = `P${totalEarnings}`;
-    
-    initializeEarningsBreakdownChart();
-    renderTransactionsList(sampleTransactions);
 }
 
 // Render transactions
@@ -848,7 +671,7 @@ function renderTransactions(transactions) {
                 <div class="transaction-service">${transaction.service}</div>
                 <div class="transaction-client">${transaction.client}</div>
             </div>
-            <div class="transaction-amount">$${transaction.amount}</div>
+            <div class="transaction-amount">P${transaction.amount}</div>
             <div class="transaction-date">${transaction.date}</div>
             <div class="transaction-status success">${transaction.status}</div>
         </div>
@@ -958,14 +781,16 @@ function setupEventListeners() {
     if (addServiceBtn) {
         addServiceBtn.addEventListener('click', () => {
             openModal('addServiceModal');
+            initServiceLocationMap();
         });
     }
-    
+
     // Add new service button
     const addNewServiceBtn = document.getElementById('addNewServiceBtn');
     if (addNewServiceBtn) {
         addNewServiceBtn.addEventListener('click', () => {
             openModal('addServiceModal');
+            initServiceLocationMap();
         });
     }
     
@@ -973,19 +798,6 @@ function setupEventListeners() {
     const searchInput = document.getElementById('serviceSearch');
     if (searchInput) {
         searchInput.addEventListener('input', debounce(loadServices, 300));
-    }
-    
-    // Logout button
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        console.log('Logout button found and event listener added');
-        logoutBtn.addEventListener('click', (e) => {
-            console.log('Logout button clicked');
-            e.preventDefault();
-            logout();
-        });
-    } else {
-        console.error('Logout button not found!');
     }
     
     // Profile form
@@ -1004,20 +816,6 @@ function setupEventListeners() {
     const contactForm = document.querySelector('.contact-form');
     if (contactForm) {
         contactForm.addEventListener('submit', handleSupportMessage);
-    }
-    
-    // Goods: add button
-    const addNewGoodBtn = document.getElementById('addNewGoodBtn');
-    if (addNewGoodBtn) {
-        addNewGoodBtn.addEventListener('click', () => {
-            showNotification('Add Good form coming soon', 'info');
-        });
-    }
-    
-    // Goods: search input
-    const goodsSearch = document.getElementById('goodsSearch');
-    if (goodsSearch) {
-        goodsSearch.addEventListener('input', debounce(loadGoods, 300));
     }
     
     // Period selectors
@@ -1078,6 +876,10 @@ function closeModal(modalId) {
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
     }
+    // Reset edit mode when closing the service modal
+    if (modalId === 'addServiceModal') {
+        _editingServiceId = null;
+    }
 }
 
 function closeAllModals() {
@@ -1089,7 +891,7 @@ function closeAllModals() {
 
 // View booking details
 function viewBookingDetails(bookingId) {
-    const booking = sampleBookings.find(b => b.id === bookingId);
+    const booking = currentBookings.find(b => b.id === bookingId);
     if (!booking) return;
     
     const modalContent = document.getElementById('bookingDetailsContent');
@@ -1126,7 +928,7 @@ function viewBookingDetails(bookingId) {
                 </div>
                 <div class="booking-detail">
                     <label>Price</label>
-                    <span>$${booking.price}</span>
+                    <span>P${booking.price}</span>
                 </div>
                 <div class="booking-detail">
                     <label>Status</label>
@@ -1141,15 +943,23 @@ function viewBookingDetails(bookingId) {
                 </div>
             ` : ''}
             
-            ${booking.status === 'upcoming' ? `
+            ${booking.status === 'pending' ? `
                 <div class="booking-actions">
-                    <button class="primary-btn" onclick="completeBooking(${booking.id})">
+                    <button class="primary-btn" onclick="confirmBooking('${booking.id}')" style="background:#28a745;">
+                        <i class="fas fa-check-circle"></i>
+                        Accept Booking
+                    </button>
+                </div>
+            ` : ''}
+            ${booking.status === 'pending' || booking.status === 'confirmed' || booking.status === 'upcoming' ? `
+                <div class="booking-actions">
+                    <button class="primary-btn" onclick="completeBooking('${booking.id}')">
                         <i class="fas fa-check"></i>
                         Mark as Completed
                     </button>
-                    <button class="cancel-btn" onclick="cancelBooking(${booking.id})">
+                    <button class="cancel-btn" onclick="cancelBooking('${booking.id}')">
                         <i class="fas fa-times"></i>
-                        Cancel Booking
+                        Decline
                     </button>
                 </div>
             ` : ''}
@@ -1159,123 +969,194 @@ function viewBookingDetails(bookingId) {
     openModal('bookingDetailsModal');
 }
 
-// Complete booking
-function completeBooking(bookingId) {
-    const booking = sampleBookings.find(b => b.id === bookingId);
-    if (!booking) return;
-    
-    if (confirm('Mark this booking as completed?')) {
-        booking.status = 'completed';
+// Accept/confirm booking (sets status to 'confirmed' – triggers customer-side inDrive acceptance)
+async function confirmBooking(bookingId) {
+    if (!confirm('Accept this booking request?')) return;
+
+    try {
+        await window.api.updateProviderBookingStatus(bookingId, 'confirmed');
         closeModal('bookingDetailsModal');
-        loadBookings();
+        await loadBookings();
+        loadDashboardData();
+        showNotification('Booking accepted!', 'success');
+    } catch (err) {
+        console.error('Failed to confirm booking via API:', err);
+        showNotification('Failed to accept booking. Please try again.', 'error');
+    }
+}
+
+// Complete booking (confirm via API)
+async function completeBooking(bookingId) {
+    if (!confirm('Mark this booking as completed?')) return;
+
+    try {
+        await window.api.updateProviderBookingStatus(bookingId, 'completed');
+        closeModal('bookingDetailsModal');
+        await loadBookings();
         loadDashboardData();
         showNotification('Booking marked as completed', 'success');
+    } catch (err) {
+        console.error('Failed to complete booking via API:', err);
+        showNotification('Failed to complete booking. Please try again.', 'error');
     }
 }
 
-// Cancel booking
-function cancelBooking(bookingId) {
-    const booking = sampleBookings.find(b => b.id === bookingId);
-    if (!booking) return;
-    
-    if (confirm('Are you sure you want to cancel this booking?')) {
-        booking.status = 'cancelled';
+// Cancel booking (confirm via API – also triggers customer-side "confirmed" for the inDrive flow)
+async function cancelBooking(bookingId) {
+    if (!confirm('Are you sure you want to cancel this booking?')) return;
+
+    try {
+        await window.api.updateProviderBookingStatus(bookingId, 'cancelled');
         closeModal('bookingDetailsModal');
-        loadBookings();
+        await loadBookings();
         loadDashboardData();
         showNotification('Booking cancelled', 'success');
+    } catch (err) {
+        console.error('Failed to cancel booking via API:', err);
+        showNotification('Failed to cancel booking. Please try again.', 'error');
     }
 }
 
-// Edit service
-function editService(serviceId) {
-    const service = sampleServices.find(s => s.id === serviceId);
-    if (!service) return;
-    
-    // In a real app, this would open an edit modal with the service data
-    console.log('Editing service:', service);
-    showNotification('Edit service functionality would be implemented here', 'info');
-}
+// Track whether we're editing an existing service
+let _editingServiceId = null;
 
-// Delete service
-function deleteService(serviceId) {
-    if (confirm('Are you sure you want to delete this service? This cannot be undone.')) {
-        // In a real app, this would call the API to delete the service
-        const index = sampleServices.findIndex(s => s.id === serviceId);
-        if (index !== -1) {
-            sampleServices.splice(index, 1);
-            loadServices();
-            showNotification('Service deleted', 'success');
+// Edit service — pre-fill the add service modal and switch to update mode
+function editService(serviceId) {
+    const service = currentServices.find(s => s.id === serviceId);
+    if (!service) return;
+
+    _editingServiceId = serviceId;
+
+    // Pre-fill form fields
+    document.getElementById('serviceTitle').value = service.title || '';
+    document.getElementById('serviceCategory').value = service.category || '';
+    document.getElementById('servicePrice').value = service.price || '';
+    document.getElementById('serviceDescription').value = service.description || '';
+
+    // Duration: try to parse "60 minutes" -> "60", otherwise set to "custom"
+    const durationEl = document.getElementById('serviceDuration');
+    if (durationEl) {
+        const match = (service.duration || '').match(/^(\d+)/);
+        if (match) {
+            durationEl.value = match[1];
+        } else {
+            durationEl.value = 'custom';
         }
     }
+
+    openModal('addServiceModal');
+    initServiceLocationMap();
 }
 
-// Handle add service
+// Delete service via API
+async function deleteService(serviceId) {
+    if (!confirm('Are you sure you want to delete this service? This cannot be undone.')) return;
+
+    try {
+        await api.deleteService(serviceId);
+        const index = currentServices.findIndex(s => s.id === serviceId);
+        if (index !== -1) {
+            currentServices.splice(index, 1);
+            renderServices(currentServices);
+        }
+        showNotification('Service deleted', 'success');
+    } catch (error) {
+        showNotification('Failed to delete service: ' + error.message, 'error');
+    }
+}
+
+// Handle add/edit service
 async function handleAddService(e) {
     e.preventDefault();
-    
+
     const title = document.getElementById('serviceTitle').value;
     const category = document.getElementById('serviceCategory').value;
     const price = document.getElementById('servicePrice').value;
     const duration = document.getElementById('serviceDuration').value;
     const description = document.getElementById('serviceDescription').value;
-    
+
     if (!title || !category || !price || !duration || !description) {
         showNotification('Please fill in all required fields', 'error');
         return;
     }
 
-    // Try creating via API so customers can see it
-    if (window.auth && window.auth.isLoggedIn()) {
-        try {
-            await window.services.create({
-                title,
-                description,
-                category,
-                price: parseFloat(price),
-                duration: duration === 'custom' ? 'Custom' : `${duration} minutes`
-            });
-            closeModal('addServiceModal');
-            showNotification('Service created successfully', 'success');
-            await loadServices();
-            e.target.reset();
-            return;
-        } catch (error) {
-            console.error('Failed to create service via API, saving locally:', error);
-        }
+    // Get location data from map marker
+    const locationAddress = document.getElementById('serviceLocationAddress').value;
+    let locationData = {};
+    if (window._serviceMapMarker) {
+        const latlng = window._serviceMapMarker.getLatLng();
+        locationData.location_lat = latlng.lat;
+        locationData.location_lng = latlng.lng;
+    }
+    if (locationAddress) {
+        locationData.location_address = locationAddress;
     }
 
-    // Fallback local insert
-    const newService = {
-        id: Date.now(),
+    if (!window.auth || !window.auth.isLoggedIn()) {
+        showNotification('You must be logged in to manage services.', 'error');
+        return;
+    }
+
+    const servicePayload = {
         title,
+        description,
         category,
         price: parseFloat(price),
-        duration: duration === 'custom' ? 'Custom' : `${duration} minutes`,
-        description,
-        rating: 0,
-        bookings: 0,
-        status: 'active',
-        image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&auto=format'
+        duration_estimate: duration === 'custom' ? 'Custom' : `${duration} minutes`,
+        ...locationData
     };
-    sampleServices.unshift(newService);
-    closeModal('addServiceModal');
-    showNotification('Service created locally (demo mode)', 'success');
-    loadServices();
-    e.target.reset();
+
+    try {
+        if (_editingServiceId) {
+            // Update existing service
+            await api.updateService(_editingServiceId, servicePayload);
+            showNotification('Service updated successfully', 'success');
+            _editingServiceId = null;
+        } else {
+            // Create new service
+            await window.services.create(servicePayload);
+            showNotification('Service created successfully', 'success');
+        }
+        closeModal('addServiceModal');
+        destroyServiceLocationMap();
+        await loadServices();
+        e.target.reset();
+    } catch (error) {
+        showNotification('Failed to save service: ' + error.message, 'error');
+    }
 }
 
 // Update profile
-function updateProfile(e) {
+async function updateProfile(e) {
     e.preventDefault();
-    
+
     const name = document.getElementById('profileName').value;
     const email = document.getElementById('profileEmail').value;
     const phone = document.getElementById('profilePhone').value;
     const location = document.getElementById('profileLocation').value;
     const businessName = document.getElementById('businessName').value;
     const businessDescription = document.getElementById('businessDescription').value;
-    
+
+    // Persist to Supabase via PUT /api/user/{id}
+    try {
+        if (window.auth && window.auth.isLoggedIn() && currentUser.id) {
+            const token = localStorage.getItem('authToken');
+            const res = await fetch(`http://localhost:5000/api/user/${currentUser.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ name, phone })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                showNotification(err.error || 'Failed to update profile', 'error');
+                return;
+            }
+        }
+    } catch (err) {
+        showNotification('Could not save profile. Please try again.', 'error');
+        return;
+    }
+
     // Update current user
     currentUser.name = name;
     currentUser.email = email;
@@ -1283,13 +1164,13 @@ function updateProfile(e) {
     currentUser.location = location;
     currentUser.businessName = businessName;
     currentUser.businessDescription = businessDescription;
-    
+
     // Save to localStorage
     localStorage.setItem('currentProvider', JSON.stringify(currentUser));
-    
+
     // Update display
     updateUserDisplay();
-    
+
     showNotification('Profile updated successfully!', 'success');
 }
 
@@ -1348,6 +1229,273 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// ===== Leaflet Map for Service Location =====
+
+function initServiceLocationMap() {
+    // Destroy previous map instance if any
+    destroyServiceLocationMap();
+
+    // Small delay so the modal is fully visible before initializing
+    setTimeout(() => {
+        const mapContainer = document.getElementById('serviceLocationMap');
+        if (!mapContainer) return;
+
+        // Center on Gaborone
+        const defaultLat = -24.6282;
+        const defaultLng = 25.9231;
+
+        const map = L.map('serviceLocationMap').setView([defaultLat, defaultLng], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+        // Store references globally so other functions can access them
+        window._serviceMap = map;
+        window._serviceMapMarker = marker;
+
+        // Fix map rendering inside modal
+        setTimeout(() => map.invalidateSize(), 300);
+
+        // "Use My Current Location" button
+        const locationBtn = document.getElementById('useMyLocationBtn');
+        if (locationBtn) {
+            locationBtn.addEventListener('click', function () {
+                if (!navigator.geolocation) {
+                    showNotification('Geolocation is not supported by your browser', 'error');
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        marker.setLatLng([lat, lng]);
+                        map.setView([lat, lng], 15);
+                        showNotification('Location updated to your current position', 'success');
+                    },
+                    (error) => {
+                        console.error('Geolocation error:', error);
+                        showNotification('Could not get your location. Please drag the marker instead.', 'error');
+                    }
+                );
+            });
+        }
+    }, 200);
+}
+
+function destroyServiceLocationMap() {
+    if (window._serviceMap) {
+        window._serviceMap.remove();
+        window._serviceMap = null;
+        window._serviceMapMarker = null;
+    }
+}
+
+// ===== Reviews Section =====
+
+async function loadProviderReviews() {
+    showLoading('providerReviewsList');
+    try {
+        const user = await window.auth.getCurrentUser();
+        if (!user) return;
+
+        // Fetch rating summary
+        const rating = await api.getProviderRating(user.id);
+        document.getElementById('providerAvgRating').textContent = rating.average_rating || '0.0';
+        const fullStars = Math.floor(rating.average_rating || 0);
+        const emptyStars = 5 - fullStars;
+        document.getElementById('providerAvgStars').innerHTML = '<i class="fas fa-star"></i>'.repeat(fullStars) + '<i class="far fa-star" style="color:#ddd;"></i>'.repeat(emptyStars);
+        document.getElementById('providerReviewCount').textContent = `${rating.review_count || 0} review${rating.review_count !== 1 ? 's' : ''}`;
+
+        // Fetch all reviews
+        const reviews = await api.getProviderReviews(user.id);
+        const container = document.getElementById('providerReviewsList');
+        if (!container) return;
+
+        if (!Array.isArray(reviews) || reviews.length === 0) {
+            container.innerHTML = '<div class="empty-state" style="padding:40px;text-align:center;color:#999;"><i class="fas fa-star" style="font-size:2rem;margin-bottom:8px;"></i><p>No reviews yet</p></div>';
+            return;
+        }
+
+        container.innerHTML = reviews.map(r => {
+            const stars = '<i class="fas fa-star" style="color:#f5a623;"></i>'.repeat(r.rating) + '<i class="far fa-star" style="color:#ddd;"></i>'.repeat(5 - r.rating);
+            const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+            return `
+                <div style="padding:16px;border:1px solid #eee;border-radius:10px;margin-bottom:12px;background:#fff;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                        <img src="${r.customer_avatar || 'https://via.placeholder.com/36?text=C'}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
+                        <div style="flex:1;">
+                            <div style="font-weight:600;font-size:0.95rem;">${r.customer_name || 'Customer'}</div>
+                            <div style="font-size:0.8rem;color:#aaa;">${date}</div>
+                        </div>
+                        <div style="font-size:0.95rem;">${stars}</div>
+                    </div>
+                    ${r.comment ? `<p style="margin:0;color:#555;font-size:0.9rem;line-height:1.5;">${r.comment}</p>` : '<p style="margin:0;color:#bbb;font-style:italic;font-size:0.85rem;">No comment</p>'}
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Failed to load reviews:', err);
+        console.warn('Could not load reviews:', err.message);
+    }
+}
+
+// ===== Messaging System =====
+
+let _msgPollTimer = null;
+let _activeChatUserId = null;
+let _currentUserId = null;
+
+function _startMessagePolling() {
+    _stopMessagePolling();
+    _msgPollTimer = setInterval(() => {
+        if (_activeChatUserId) _loadChatThread(_activeChatUserId);
+        loadConversations(true);
+    }, 5000);
+}
+
+function _stopMessagePolling() {
+    if (_msgPollTimer) { clearInterval(_msgPollTimer); _msgPollTimer = null; }
+}
+
+async function loadConversations(silent = false) {
+    if (!_currentUserId) {
+        try {
+            const u = await window.auth.getCurrentUser();
+            if (u) _currentUserId = u.id;
+        } catch (_) {}
+    }
+
+    const container = document.getElementById('convoListItems');
+    if (!container) return;
+
+    if (!silent) showLoading('convoListItems');
+
+    try {
+        const convos = await window.messaging.getConversations();
+        if (!Array.isArray(convos) || convos.length === 0) {
+            if (!silent) container.innerHTML = '<div class="empty-state" style="padding:40px 16px;text-align:center;color:#999;"><i class="fas fa-comments" style="font-size:2rem;margin-bottom:8px;"></i><p>No conversations yet</p></div>';
+            return;
+        }
+
+        container.innerHTML = convos.map(c => `
+            <div class="convo-item" data-user-id="${c.user_id}" style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;transition:background 0.15s;${_activeChatUserId === c.user_id ? 'background:#e8e0f7;' : ''}" onmouseover="this.style.background='#f0ecf9'" onmouseout="this.style.background='${_activeChatUserId === c.user_id ? '#e8e0f7' : ''}'">
+                <img src="${c.user_avatar || 'https://via.placeholder.com/40?text=U'}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.user_name}</div>
+                    <div style="font-size:0.8rem;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.is_mine ? 'You: ' : ''}${c.last_message}</div>
+                </div>
+                <div style="font-size:0.7rem;color:#aaa;white-space:nowrap;">${_timeAgo(c.last_message_at)}</div>
+            </div>
+        `).join('');
+
+        container.querySelectorAll('.convo-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const uid = el.getAttribute('data-user-id');
+                const name = el.querySelector('div[style*="font-weight:600"]').textContent;
+                _selectConversation(uid, name);
+            });
+        });
+    } catch (e) {
+        console.error('Failed to load conversations:', e);
+        if (!silent) console.warn('Could not load conversations:', e.message);
+    }
+}
+
+function _selectConversation(userId, userName) {
+    _activeChatUserId = userId;
+    document.getElementById('chatWithName').textContent = userName;
+    document.getElementById('chatInputArea').style.display = 'flex';
+    _loadChatThread(userId);
+    loadConversations(true);
+
+    const sendBtn = document.getElementById('chatSendBtn');
+    const input = document.getElementById('chatMessageInput');
+    const newSend = sendBtn.cloneNode(true);
+    sendBtn.parentNode.replaceChild(newSend, sendBtn);
+    newSend.addEventListener('click', () => _sendMessage(userId));
+    input.onkeydown = (e) => { if (e.key === 'Enter') _sendMessage(userId); };
+}
+
+async function _loadChatThread(userId) {
+    const container = document.getElementById('chatMessages');
+    if (!container) return;
+
+    try {
+        const messages = await window.messaging.getMessages(userId);
+        if (!Array.isArray(messages)) return;
+
+        const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
+
+        container.innerHTML = messages.map(m => {
+            const isMine = m.sender_id === _currentUserId;
+            return `<div style="max-width:70%;padding:10px 14px;border-radius:16px;font-size:0.9rem;line-height:1.4;word-wrap:break-word;${isMine ? 'align-self:flex-end;background:#e91e8c;color:#fff;border-bottom-right-radius:4px;' : 'align-self:flex-start;background:#f0f0f0;color:#333;border-bottom-left-radius:4px;'}">
+                ${m.content}
+                <div style="font-size:0.65rem;margin-top:4px;opacity:0.7;text-align:${isMine ? 'right' : 'left'};">${_timeAgo(m.created_at)}</div>
+            </div>`;
+        }).join('');
+
+        if (wasAtBottom || messages.length <= 20) container.scrollTop = container.scrollHeight;
+    } catch (e) {
+        console.error('Failed to load messages:', e);
+        console.warn('Could not load messages:', e.message);
+    }
+}
+
+async function _sendMessage(userId) {
+    const input = document.getElementById('chatMessageInput');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    try {
+        await window.messaging.send(userId, text);
+        await _loadChatThread(userId);
+        loadConversations(true);
+    } catch (e) {
+        showNotification('Failed to send message', 'error');
+    }
+}
+
+function openMessageWithUser(userId, userName) {
+    showSection('messages');
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    const msgLink = document.querySelector('.nav-link[data-section="messages"]');
+    if (msgLink) msgLink.classList.add('active');
+    setTimeout(() => _selectConversation(userId, userName || 'User'), 300);
+}
+
+function _timeAgo(isoStr) {
+    if (!isoStr) return '';
+    const diff = Date.now() - new Date(isoStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'now';
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d`;
+}
+
+// ===== Loading Spinner Utilities =====
+
+function showLoading(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = `<div class="loading-spinner-container" style="display:flex;align-items:center;justify-content:center;padding:40px;">
+        <div style="width:36px;height:36px;border:4px solid #e0e0e0;border-top-color:#e91e8c;border-radius:50%;animation:_spin 0.7s linear infinite;"></div>
+    </div>
+    <style>@keyframes _spin{to{transform:rotate(360deg)}}</style>`;
+}
+
+function hideLoading(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    const spinner = el.querySelector('.loading-spinner-container');
+    if (spinner) spinner.remove();
 }
 
 function showNotification(message, type = 'info') {
