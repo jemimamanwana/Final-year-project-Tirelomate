@@ -20,7 +20,7 @@ def get_provider_bookings():
     if status and status != "all":
         # Map frontend status values to database status values
         if status == "upcoming":
-            query = query.in_("status", ["pending", "confirmed"])
+            query = query.in_("status", ["pending", "confirmed", "in_progress"])
         else:
             query = query.eq("status", status)
 
@@ -67,7 +67,7 @@ def update_provider_booking(booking_id):
     if not status:
         return jsonify({"error": "Status is required"}), 400
 
-    if status not in ("pending", "confirmed", "completed", "cancelled"):
+    if status not in ("pending", "confirmed", "in_progress", "completed", "cancelled"):
         return jsonify({"error": "Invalid status"}), 400
 
     # Verify this booking belongs to the provider
@@ -82,11 +82,19 @@ def update_provider_booking(booking_id):
     if not booking.data:
         return jsonify({"error": "Booking not found"}), 404
 
-    result = (
-        supabase.table("bookings")
-        .update({"status": status})
-        .eq("id", booking_id)
-        .execute()
-    )
+    try:
+        result = (
+            supabase.table("bookings")
+            .update({"status": status})
+            .eq("id", booking_id)
+            .execute()
+        )
+        print(f"[provider] Booking {booking_id} status -> '{status}': {result.data}")
+    except Exception as e:
+        print(f"[provider] ERROR updating booking {booking_id} to '{status}': {e}")
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+    if not result.data:
+        return jsonify({"error": "Update failed — database may have rejected the status value. Check Supabase constraints."}), 500
 
     return jsonify(result.data[0]), 200

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tirelomate - Service Marketplace</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/lang.js" defer></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -14,25 +15,25 @@
         <div class="container">
             <div class="logo">
                 <h1>Tirelomate</h1>
-                <p>Where Services Meet Needs</p>
+                <p data-lang-key="logo_tagline">Where Services Meet Needs</p>
             </div>
             <nav>
                 <ul>
-                    <li><a href="#" class="active">Home</a></li>
-                    <li><a href="#services">Services</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#testimonials">Testimonials</a></li>
-                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#" class="active" data-lang-key="nav_home">Home</a></li>
+                    <li><a href="#services" data-lang-key="nav_services">Services</a></li>
+                    <li><a href="#about" data-lang-key="nav_about">About</a></li>
+                    <li><a href="#testimonials" data-lang-key="nav_testimonials">Testimonials</a></li>
+                    <li><a href="#contact" data-lang-key="nav_contact">Contact</a></li>
                 </ul>
             </nav>
             <div class="auth-buttons" id="authButtons">
-                <button id="loginBtn" class="outline-btn">Log In</button>
-                <button id="signupBtn" class="primary-btn">Sign Up</button>
+                <button id="loginBtn" class="outline-btn" data-lang-key="btn_login">Log In</button>
+                <button id="signupBtn" class="primary-btn" data-lang-key="btn_signup">Sign Up</button>
             </div>
             <div class="user-welcome" id="userWelcome" style="display: none;">
                 <span id="welcomeMessage">Welcome, User!</span>
-                <button id="dashboardBtn" class="primary-btn">Dashboard</button>
-                <button id="logoutBtn" class="outline-btn">Logout</button>
+                <button id="dashboardBtn" class="primary-btn" data-lang-key="btn_dashboard">Dashboard</button>
+                <button id="logoutBtn" class="outline-btn" data-lang-key="btn_logout">Logout</button>
             </div>
             <button class="mobile-menu-toggle" aria-label="Toggle menu">
                 <i class="fas fa-bars"></i>
@@ -63,12 +64,12 @@
         <div class="hero-content">
             <div class="hero-subtitle">
                 <span class="subtitle-line"></span>
-                <span>WHERE SERVICES MEET NEEDS</span>
+                <span data-lang-key="hero_subtitle">WHERE SERVICES MEET NEEDS</span>
             </div>
             <h1 class="hero-title">
                 <span id="typingTarget"></span><span class="typing-cursor"></span>
             </h1>
-            <a href="#services" class="hero-cta-btn">EXPLORE SERVICES</a>
+            <a href="#services" class="hero-cta-btn" data-lang-key="hero_cta">EXPLORE SERVICES</a>
         </div>
 
         <!-- Slider arrows -->
@@ -90,17 +91,17 @@
     <section class="search-section">
         <div class="container">
             <div class="search-bar">
-                <input type="text" id="serviceSearch" placeholder="What service do you need?">
-                <input type="text" id="locationSearch" placeholder="Location">
-                <button class="primary-btn" id="searchBtn"><i class="fas fa-search"></i> Search</button>
-                <button class="outline-btn" id="clearSearchBtn" style="display: none;"><i class="fas fa-times"></i> Clear</button>
+                <input type="text" id="serviceSearch" data-lang-key="search_placeholder" placeholder="What service do you need?">
+                <input type="text" id="locationSearch" data-lang-key="location_placeholder" placeholder="Location">
+                <button class="primary-btn" id="searchBtn"><i class="fas fa-search"></i> <span data-lang-key="btn_search">Search</span></button>
+                <button class="outline-btn" id="clearSearchBtn" style="display: none;"><i class="fas fa-times"></i> <span data-lang-key="btn_clear">Clear</span></button>
             </div>
             <div class="popular-tags">
-                <span>Popular:</span>
-                <a href="#" class="popular-tag" data-service="Cleaning">Cleaning</a>
-                <a href="#" class="popular-tag" data-service="Web Design">Web Design</a>
-                <a href="#" class="popular-tag" data-service="Tutoring">Tutoring</a>
-                <a href="#" class="popular-tag" data-service="Moving">Moving</a>
+                <span data-lang-key="popular_label">Popular:</span>
+                <a href="#" class="popular-tag" data-service="Cleaning" data-lang-key="popular_cleaning">Cleaning</a>
+                <a href="#" class="popular-tag" data-service="Web Design" data-lang-key="popular_webdesign">Web Design</a>
+                <a href="#" class="popular-tag" data-service="Tutoring" data-lang-key="popular_tutoring">Tutoring</a>
+                <a href="#" class="popular-tag" data-service="Moving" data-lang-key="popular_moving">Moving</a>
             </div>
         </div>
     </section>
@@ -110,15 +111,15 @@
         <div class="container">
             <div class="stat-item animate-on-scroll">
                 <div class="stat-number">1000+</div>
-                <div class="stat-label">Services Offered</div>
+                <div class="stat-label" data-lang-key="stat_services">Services Offered</div>
             </div>
             <div class="stat-item animate-on-scroll">
                 <div class="stat-number">500+</div>
-                <div class="stat-label">Happy Clients</div>
+                <div class="stat-label" data-lang-key="stat_clients">Happy Clients</div>
             </div>
             <div class="stat-item animate-on-scroll">
                 <div class="stat-number">98%</div>
-                <div class="stat-label">Satisfaction Rate</div>
+                <div class="stat-label" data-lang-key="stat_satisfaction">Satisfaction Rate</div>
             </div>
         </div>
     </section>
@@ -127,16 +128,16 @@
     <section id="services" class="services">
         <div class="container">
             <div class="section-header animate-on-scroll">
-                <h2>Featured Services</h2>
-                <p>Browse our most popular service categories</p>
+                <h2 data-lang-key="services_title">Featured Services</h2>
+                <p data-lang-key="services_subtitle">Browse our most popular service categories</p>
             </div>
 
             <div class="category-tabs">
-                <button class="category-tab active" data-category="all">All Services</button>
-                <button class="category-tab" data-category="home">Home Services</button>
-                <button class="category-tab" data-category="tech">Tech Services</button>
-                <button class="category-tab" data-category="education">Education</button>
-                <button class="category-tab" data-category="business">Business</button>
+                <button class="category-tab active" data-category="all" data-lang-key="tab_all">All Services</button>
+                <button class="category-tab" data-category="home" data-lang-key="tab_home">Home Services</button>
+                <button class="category-tab" data-category="tech" data-lang-key="tab_tech">Tech Services</button>
+                <button class="category-tab" data-category="education" data-lang-key="tab_education">Education</button>
+                <button class="category-tab" data-category="business" data-lang-key="tab_business">Business</button>
             </div>
 
             <div class="services-grid" id="servicesGrid">
@@ -145,7 +146,7 @@
 
             <div class="view-all">
                 <a href="services.html">
-                    <button class="outline-btn">View All Services</button>
+                    <button class="outline-btn" data-lang-key="btn_view_all">View All Services</button>
                 </a>
             </div>
         </div>
@@ -155,30 +156,30 @@
     <section id="about" class="about">
         <div class="container">
             <div class="about-content">
-                <h2 class="animate-on-scroll">We Connect You With Top Professionals</h2>
-                <p class="animate-on-scroll">Tirelomate was founded with a simple mission: to make finding trusted professionals easy and stress-free. Our platform carefully vets all service providers to ensure quality and reliability.</p>
+                <h2 class="animate-on-scroll" data-lang-key="about_title">We Connect You With Top Professionals</h2>
+                <p class="animate-on-scroll" data-lang-key="about_p">Tirelomate was founded with a simple mission: to make finding trusted professionals easy and stress-free. Our platform carefully vets all service providers to ensure quality and reliability.</p>
 
                 <div class="about-features">
                     <div class="feature-item animate-on-scroll">
                         <div class="feature-icon">
                             <i class="fas fa-shield-alt"></i>
                         </div>
-                        <h3>Verified Professionals</h3>
-                        <p>All providers undergo background checks and verification</p>
+                        <h3 data-lang-key="about_verified">Verified Professionals</h3>
+                        <p data-lang-key="about_verified_p">All providers undergo background checks and verification</p>
                     </div>
                     <div class="feature-item animate-on-scroll">
                         <div class="feature-icon">
                             <i class="fas fa-dollar-sign"></i>
                         </div>
-                        <h3>Transparent Pricing</h3>
-                        <p>No hidden fees - know exactly what you'll pay upfront</p>
+                        <h3 data-lang-key="about_pricing">Transparent Pricing</h3>
+                        <p data-lang-key="about_pricing_p">No hidden fees - know exactly what you'll pay upfront</p>
                     </div>
                     <div class="feature-item animate-on-scroll">
                         <div class="feature-icon">
                             <i class="fas fa-star"></i>
                         </div>
-                        <h3>Customer Reviews</h3>
-                        <p>Read real feedback from previous clients</p>
+                        <h3 data-lang-key="about_reviews">Customer Reviews</h3>
+                        <p data-lang-key="about_reviews_p">Read real feedback from previous clients</p>
                     </div>
                 </div>
             </div>
@@ -195,37 +196,37 @@
     <section class="how-it-works">
         <div class="container">
             <div class="section-header animate-on-scroll">
-                <h2>How Tirelomate Works</h2>
-                <p>Getting help has never been easier</p>
+                <h2 data-lang-key="how_title">How Tirelomate Works</h2>
+                <p data-lang-key="how_subtitle">Getting help has never been easier</p>
             </div>
 
             <div class="steps">
                 <div class="step animate-on-scroll">
                     <div class="step-number">1</div>
                     <div class="step-content">
-                        <h3>Search Services</h3>
-                        <p>Browse our extensive directory or search for specific services</p>
+                        <h3 data-lang-key="step1_title">Search Services</h3>
+                        <p data-lang-key="step1_p">Browse our extensive directory or search for specific services</p>
                     </div>
                 </div>
                 <div class="step animate-on-scroll">
                     <div class="step-number">2</div>
                     <div class="step-content">
-                        <h3>Compare Options</h3>
-                        <p>View profiles, ratings, and prices to find your perfect match</p>
+                        <h3 data-lang-key="step2_title">Compare Options</h3>
+                        <p data-lang-key="step2_p">View profiles, ratings, and prices to find your perfect match</p>
                     </div>
                 </div>
                 <div class="step animate-on-scroll">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h3>Book & Pay</h3>
-                        <p>Schedule your service and pay securely through our platform</p>
+                        <h3 data-lang-key="step3_title">Book & Pay</h3>
+                        <p data-lang-key="step3_p">Schedule your service and pay securely through our platform</p>
                     </div>
                 </div>
                 <div class="step animate-on-scroll">
                     <div class="step-number">4</div>
                     <div class="step-content">
-                        <h3>Enjoy Service</h3>
-                        <p>Relax while the professional handles everything</p>
+                        <h3 data-lang-key="step4_title">Enjoy Service</h3>
+                        <p data-lang-key="step4_p">Relax while the professional handles everything</p>
                     </div>
                 </div>
             </div>
@@ -236,8 +237,8 @@
     <section id="testimonials" class="testimonials">
         <div class="container">
             <div class="section-header animate-on-scroll">
-                <h2>What Our Clients Say</h2>
-                <p>Hear from people who've used our services</p>
+                <h2 data-lang-key="testimonials_title">What Our Clients Say</h2>
+                <p data-lang-key="testimonials_subtitle">Hear from people who've used our services</p>
             </div>
 
             <div class="testimonial-slider">
@@ -308,9 +309,9 @@
     <section class="cta">
         <div class="container">
             <div class="cta-content animate-on-scroll">
-                <h2>Ready to find your perfect service provider?</h2>
-                <p>Join thousands of satisfied customers who've found reliable help through Tirelomate</p>
-                <button class="primary-btn">Get Started Now</button>
+                <h2 data-lang-key="cta_title">Ready to find your perfect service provider?</h2>
+                <p data-lang-key="cta_p">Join thousands of satisfied customers who've found reliable help through Tirelomate</p>
+                <button class="primary-btn" data-lang-key="cta_btn">Get Started Now</button>
             </div>
         </div>
     </section>
@@ -322,9 +323,9 @@
                 <div class="footer-section">
                     <div class="logo">
                         <h3>Tirelomate</h3>
-                        <p>Premium Services Marketplace</p>
+                        <p data-lang-key="footer_tagline">Premium Services Marketplace</p>
                     </div>
-                    <p>Connecting customers with trusted professionals since 2025.</p>
+                    <p data-lang-key="footer_since">Connecting customers with trusted professionals since 2025.</p>
                     <div class="social-links">
                         <a href="#"><i class="fab fa-facebook-f"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
@@ -334,7 +335,7 @@
                 </div>
 
                 <div class="footer-section">
-                    <h3>Quick Links</h3>
+                    <h3 data-lang-key="footer_quick">Quick Links</h3>
                     <ul>
                         <li><a href="#">Home</a></li>
                         <li><a href="#services">Services</a></li>
@@ -345,7 +346,7 @@
                 </div>
 
                 <div class="footer-section">
-                    <h3>Services</h3>
+                    <h3 data-lang-key="footer_services_col">Services</h3>
                     <ul>
                         <li><a href="#">Home Services</a></li>
                         <li><a href="#">Tech Support</a></li>
@@ -356,7 +357,7 @@
                 </div>
 
                 <div class="footer-section">
-                    <h3>Contact Us</h3>
+                    <h3 data-lang-key="footer_contact_col">Contact Us</h3>
                     <ul class="contact-info">
                         <li><i class="fas fa-map-marker-alt"></i> Gaborone, Botswana</li>
                         <li><i class="fas fa-phone"></i> (267) 76146451</li>
@@ -471,8 +472,9 @@
 
     <!-- AI Chatbot -->
     <div class="chatbot-container">
-        <div class="chatbot-toggle" id="chatbotToggle">
+        <div class="chatbot-toggle" id="chatbotToggle" title="Translate to Setswana">
             <i class="fas fa-comments"></i>
+            <span style="display:block;font-size:0.55rem;font-weight:700;letter-spacing:0.5px;margin-top:2px">BW</span>
         </div>
 
         <div class="chatbot-window" id="chatbotWindow">
