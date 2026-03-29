@@ -943,33 +943,32 @@ async function handleSignupSubmission(form) {
     const email = form.querySelector('#signupEmail').value;
     const password = form.querySelector('#signupPassword').value;
     const confirmPassword = form.querySelector('#signupConfirmPassword').value;
-    
+
     // Get selected user type
     const userType = form.querySelector('#signupUserType').value;
-    
+
     if (password !== confirmPassword) {
         showNotification('Passwords do not match!', 3000, 'error');
         return;
     }
-    
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.textContent = 'Creating Account...';
+    submitButton.disabled = true;
+
     try {
-        // Show loading state
-        const submitButton = form.querySelector('button[type="submit"]');
-        const originalText = submitButton.textContent;
-        submitButton.textContent = 'Creating Account...';
-        submitButton.disabled = true;
-        
         // Check if auth object exists
         if (!window.auth) {
             throw new Error('Authentication system not available');
         }
-        
+
         // Attempt registration using the API with user type
         const response = await window.auth.register(name, email, password, userType);
-        
+
         if (response.token) {
             showNotification('Account created successfully! Welcome to ServiceHub. Redirecting to dashboard...', 3000, 'success');
-            
+
             // Close modal and redirect based on user type
             setTimeout(() => {
                 closeAllModals();
@@ -979,6 +978,7 @@ async function handleSignupSubmission(form) {
                     window.location.href = 'dashboard.html';
                 }
             }, 1500);
+            return; // Skip finally reset — page is redirecting
         } else {
             showNotification('Registration failed. Please try again.', 3000, 'error');
         }
@@ -986,10 +986,13 @@ async function handleSignupSubmission(form) {
         console.error('Registration error:', error);
         showNotification(error.message || 'Registration failed. Please try again.', 3000, 'error');
     } finally {
-        // Reset button state
-        const submitButton = form.querySelector('button[type="submit"]');
         submitButton.textContent = originalText;
         submitButton.disabled = false;
+        // Clear passwords so user can retype
+        const pwField = form.querySelector('#signupPassword');
+        const cpField = form.querySelector('#signupConfirmPassword');
+        if (pwField) pwField.value = '';
+        if (cpField) cpField.value = '';
     }
 }
 
