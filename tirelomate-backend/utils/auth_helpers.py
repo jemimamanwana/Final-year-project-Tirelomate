@@ -43,12 +43,12 @@ def token_required(f):
     def decorated(*args, **kwargs):
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
-            return jsonify({"error": "Missing or invalid token"}), 401
+            return jsonify({"error": "Session expired. Please log in again."}), 401
 
         token = auth_header.split(" ")[1]
         payload = decode_token(token)
         if not payload:
-            return jsonify({"error": "Invalid or expired token"}), 401
+            return jsonify({"error": "Session expired. Please log in again."}), 401
 
         # Fetch user from database
         from models.supabase_client import supabase

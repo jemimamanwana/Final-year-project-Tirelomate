@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - ServiceHub</title>
+    <title>Customer Dashboard - ServiceHub</title>
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}.skeleton-text{display:inline-block;height:1em;background:linear-gradient(90deg,#e0e0e0 25%,#f0f0f0 50%,#e0e0e0 75%);background-size:200%;animation:shimmer 1.5s infinite;border-radius:4px;vertical-align:middle;}</style>
 </head>
 <body>
     <div class="dashboard-container">
@@ -23,12 +25,6 @@
                         <a href="#" class="nav-link active" data-section="services">
                             <i class="fas fa-concierge-bell"></i>
                             <span>Services</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="nav-link" data-section="lending">
-                            <i class="fas fa-hand-holding-usd"></i>
-                            <span>P2P Lending</span>
                         </a>
                     </li>
                     <li>
@@ -50,6 +46,12 @@
                         </a>
                     </li>
                     <li>
+                        <a href="#" class="nav-link" data-section="messages">
+                            <i class="fas fa-comments"></i>
+                            <span>Messages</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="#" class="nav-link" data-section="support">
                             <i class="fas fa-headset"></i>
                             <span>Support</span>
@@ -62,7 +64,7 @@
                 <div class="user-info">
                     <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="user-avatar">
                     <div class="user-details">
-                        <span class="user-name" id="sidebarUserName">John Doe</span>
+                        <span class="user-name" id="sidebarUserName"><span class="skeleton-text" style="width:80px;"></span></span>
                         <span class="user-role">Customer</span>
                     </div>
                 </div>
@@ -79,7 +81,7 @@
             <section id="services-section" class="content-section active">
                 <div class="section-header">
                     <div class="welcome-message">
-                        <h1>Welcome, <span id="userNameDisplay">John Doe</span>!</h1>
+                        <h1>Welcome, <span id="userNameDisplay"><span class="skeleton-text" style="width:100px;"></span></span>!</h1>
                         <p>What service would you like today?</p>
                     </div>
                     <div class="header-actions">
@@ -118,12 +120,22 @@
                     </button>
                 </div>
 
-                <!-- Search Bar -->
-                <div class="search-container">
-                    <div class="search-bar">
+                <!-- Search Bar + View Toggle -->
+                <div class="search-container" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <div class="search-bar" style="flex:1;min-width:200px;">
                         <input type="text" placeholder="Search for services..." id="serviceSearch">
                         <button class="search-btn">
                             <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="view-toggle" style="display:flex;border:2px solid #e91e8c;border-radius:8px;overflow:hidden;">
+                        <button id="listViewBtn" class="view-toggle-btn active" title="List View"
+                                style="padding:8px 14px;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.9rem;font-weight:600;background:#e91e8c;color:#fff;transition:all 0.2s;">
+                            <i class="fas fa-th-list"></i>
+                        </button>
+                        <button id="mapViewBtn" class="view-toggle-btn" title="Map View"
+                                style="padding:8px 14px;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.9rem;font-weight:600;background:#fff;color:#e91e8c;transition:all 0.2s;">
+                            <i class="fas fa-map-marked-alt"></i>
                         </button>
                     </div>
                 </div>
@@ -132,161 +144,11 @@
                 <div class="services-grid" id="servicesGrid">
                     <!-- Services will be dynamically loaded here -->
                 </div>
+
+                <!-- Services Map (hidden by default) -->
+                <div id="servicesMapContainer" style="height:500px;display:none;border-radius:12px;border:1px solid #ddd;margin-top:10px;"></div>
             </section>
 
-            <!-- P2P Lending Section (Customer) -->
-            <!-- P2P Lending Section (Customer) -->
-            <section id="lending-section" class="content-section">
-                <div class="section-header">
-                    <h2>P2P Lending</h2>
-                    <p>Borrow or invest in community loans with blockchain security</p>
-                </div>
-
-                
-                <div style="background: #e8f5e8; padding: 20px; border-radius: 10px; margin: 20px 0; border-left: 4px solid #28a745;">
-                    <h3 style="margin-top: 0; color: #155724;">🚀 Stellar Testnet Demo</h3>
-                    <p style="margin-bottom: 15px;">Test the P2P lending functionality:</p>
-                    <button onclick="testStellarWallet()" class="btn btn-primary">
-                        Create Demo Stellar Wallet
-                    </button>
-                    <button onclick="testCreditScore()" class="btn btn-info" style="margin-left: 10px;">
-                        Check Credit Score
-                    </button>
-                    <button onclick="testServiceRating()" class="btn btn-warning" style="margin-left: 10px;">
-                        Test Service Rating
-                    </button>
-                    <div id="walletResult" style="margin-top: 15px;"></div>
-                </div>
-
-                
-
-                <!-- Wallet Display -->
-                <div class="wallet-display">
-                    <h2 style="margin-bottom: 10px;">Stellar Wallet</h2>
-                    <p style="opacity: 0.9;">Your blockchain wallet on Stellar Network</p>
-                    <div class="balance-amount">500.00 XLM</div>
-                    <p style="opacity: 0.8;">≈ P2,500.00 BWP</p>
-                    <div class="wallet-address">
-                        <strong>Public Address:</strong><br>
-                        GCEXAMPLESTELLARPUBLICKEY123456789ABCDEFGH
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary">📱 Receive</button>
-                        <button class="btn btn-outline">↑ Send</button>
-                        <button class="btn btn-outline">📜 History</button>
-                    </div>
-                </div>
-
-                <!-- Credit Score -->
-                <div class="credit-display">
-                    <div class="score-circle">
-                        <div class="score-value">750</div>
-                        <div class="score-label">Credit Score</div>
-                    </div>
-                    <div class="score-factors">
-                        <h3 style="color: #4361ee; margin-bottom: 15px;">Excellent Credit</h3>
-                        <p style="color: #666; margin-bottom: 20px;">You qualify for the best loan rates!</p>
-                        <div class="factor-item">
-                            <div>
-                                <strong>Payment History</strong><br>
-                                <span style="color: #666; font-size: 0.9rem;">100% on-time payments</span>
-                            </div>
-                            <div class="factor-bar"><div class="factor-fill" style="width: 95%"></div></div>
-                        </div>
-                        <div class="factor-item">
-                            <div>
-                                <strong>Transaction Volume</strong><br>
-                                <span style="color: #666; font-size: 0.9rem;">High activity</span>
-                            </div>
-                            <div class="factor-bar"><div class="factor-fill" style="width: 85%"></div></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- P2P Loan Marketplace -->
-                <h3 style="margin: 30px 0 15px;">P2P Loan Marketplace</h3>
-                <div class="action-buttons" style="margin-bottom: 20px;">
-                    <button class="btn btn-primary">🤝 Request Loan</button>
-                    <button class="btn btn-outline">💼 My Loans</button>
-                </div>
-                <div class="loans-grid">
-                    <div class="loan-card">
-                        <div class="loan-header">
-                            <div class="borrower-info">
-                                <div class="avatar">D</div>
-                                <div>
-                                    <strong>David Borrower</strong><br>
-                                    <span style="color: #666; font-size: 0.85rem;">Credit: 680</span>
-                                </div>
-                            </div>
-                            <span class="risk-badge risk-low">LOW RISK</span>
-                        </div>
-                        <div class="loan-amount">P500.00</div>
-                        <p style="color: #666; margin-bottom: 15px;">Business expansion for small shop</p>
-                        <div class="loan-details">
-                            <div class="detail-item"><span class="detail-label">Interest Rate</span><br><span class="detail-value">8.0%</span></div>
-                            <div class="detail-item"><span class="detail-label">Term</span><br><span class="detail-value">6 months</span></div>
-                            <div class="detail-item"><span class="detail-label">Monthly Payment</span><br><span class="detail-value">P86.60</span></div>
-                            <div class="detail-item"><span class="detail-label">Risk Score</span><br><span class="detail-value">25/100</span></div>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-outer"><div class="progress-bar-inner" style="width: 60%"></div></div>
-                            <div class="progress-info"><span>P300 funded</span><span>60%</span></div>
-                        </div>
-                        <button class="btn btn-primary" style="width: 100%;">💰 Fund This Loan</button>
-                    </div>
-                    <div class="loan-card">
-                        <div class="loan-header">
-                            <div class="borrower-info">
-                                <div class="avatar">E</div>
-                                <div>
-                                    <strong>Emma Student</strong><br>
-                                    <span style="color: #666; font-size: 0.85rem;">Credit: 720</span>
-                                </div>
-                            </div>
-                            <span class="risk-badge risk-low">LOW RISK</span>
-                        </div>
-                        <div class="loan-amount">P300.00</div>
-                        <p style="color: #666; margin-bottom: 15px;">Education fees for university</p>
-                        <div class="loan-details">
-                            <div class="detail-item"><span class="detail-label">Interest Rate</span><br><span class="detail-value">6.0%</span></div>
-                            <div class="detail-item"><span class="detail-label">Term</span><br><span class="detail-value">12 months</span></div>
-                            <div class="detail-item"><span class="detail-label">Monthly Payment</span><br><span class="detail-value">P25.85</span></div>
-                            <div class="detail-item"><span class="detail-label">Risk Score</span><br><span class="detail-value">15/100</span></div>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-outer"><div class="progress-bar-inner" style="width: 85%"></div></div>
-                            <div class="progress-info"><span>P255 funded</span><span>85%</span></div>
-                        </div>
-                        <button class="btn btn-primary" style="width: 100%;">💰 Fund This Loan</button>
-                    </div>
-                    <div class="loan-card">
-                        <div class="loan-header">
-                            <div class="borrower-info">
-                                <div class="avatar">J</div>
-                                <div>
-                                    <strong>John Farmer</strong><br>
-                                    <span style="color: #666; font-size: 0.85rem;">Credit: 620</span>
-                                </div>
-                            </div>
-                            <span class="risk-badge risk-medium">MEDIUM RISK</span>
-                        </div>
-                        <div class="loan-amount">P200.00</div>
-                        <p style="color: #666; margin-bottom: 15px;">Farm equipment repair</p>
-                        <div class="loan-details">
-                            <div class="detail-item"><span class="detail-label">Interest Rate</span><br><span class="detail-value">10.0%</span></div>
-                            <div class="detail-item"><span class="detail-label">Term</span><br><span class="detail-value">3 months</span></div>
-                            <div class="detail-item"><span class="detail-label">Monthly Payment</span><br><span class="detail-value">P69.03</span></div>
-                            <div class="detail-item"><span class="detail-label">Risk Score</span><br><span class="detail-value">35/100</span></div>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar-outer"><div class="progress-bar-inner" style="width: 20%"></div></div>
-                            <div class="progress-info"><span>P40 funded</span><span>20%</span></div>
-                        </div>
-                        <button class="btn btn-primary" style="width: 100%;">💰 Fund This Loan</button>
-                    </div>
-                </div>
-            </section>
 
             <!-- Bookings Section -->
             <section id="bookings-section" class="content-section">
@@ -318,49 +180,13 @@
             <!-- Payments Section -->
             <section id="payments-section" class="content-section">
                 <div class="section-header">
-                    <h2>Payments</h2>
-                    <p>Choose a payment method to complete your purchase</p>
+                    <h2>Payment History</h2>
+                    <p>View your past transactions</p>
                 </div>
-
-                <div class="section-container">
-                    <h3>Pay Securely</h3>
-                    <p style="color:#666; margin-bottom:12px;">We redirect you to a secure payment gateway. No card details are collected here.</p>
-
-                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                        <button id="btnPayGateway" class="primary-btn">
-                            <i class="fas fa-lock"></i>
-                            Pay via Secure Gateway
-                        </button>
-                        <button id="btnPayPaypal" class="outline-btn">
-                            <i class="fab fa-paypal"></i>
-                            Pay with PayPal
-                        </button>
-                    </div>
-
-                    <div id="paymentNotice" style="margin-top:14px; color:#6c757d; font-size:0.95rem;">
-                        After clicking a button above, you’ll be redirected to complete the payment.
-                    </div>
-                </div>
-
-                <div class="transaction-history">
-                    <h3>Recent Transactions</h3>
-                    <div class="transactions-list">
-                        <div class="transaction-item">
-                            <div class="transaction-info">
-                                <div class="transaction-service">Home Cleaning Service</div>
-                                <div class="transaction-date">March 15, 2024</div>
-                            </div>
-                            <div class="transaction-amount">P120.00</div>
-                            <div class="transaction-status success">Completed</div>
-                        </div>
-                        <div class="transaction-item">
-                            <div class="transaction-info">
-                                <div class="transaction-service">Math Tutoring</div>
-                                <div class="transaction-date">March 12, 2024</div>
-                            </div>
-                            <div class="transaction-amount">P50.00</div>
-                            <div class="transaction-status success">Completed</div>
-                        </div>
+                <div id="paymentsListContainer">
+                    <div class="empty-state" style="padding:40px;text-align:center;color:#999;">
+                        <i class="fas fa-receipt" style="font-size:2rem;margin-bottom:8px;"></i>
+                        <p>Loading payments...</p>
                     </div>
                 </div>
             </section>
@@ -483,6 +309,40 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Messages Section -->
+            <section id="messages-section" class="content-section">
+                <div class="section-header">
+                    <h2>Messages</h2>
+                    <p>Chat with your service providers</p>
+                </div>
+                <div class="messages-container" style="display:flex;gap:0;height:calc(100vh - 200px);border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;background:#fff;">
+                    <!-- Conversations list -->
+                    <div id="conversationsList" style="width:300px;min-width:260px;border-right:1px solid #e0e0e0;overflow-y:auto;background:#fafafa;">
+                        <div style="padding:16px;border-bottom:1px solid #e0e0e0;font-weight:700;font-size:1rem;">Conversations</div>
+                        <div id="convoListItems" style="padding:0;">
+                            <div class="empty-state" style="padding:40px 16px;text-align:center;color:#999;">
+                                <i class="fas fa-comments" style="font-size:2rem;margin-bottom:8px;"></i>
+                                <p>No conversations yet</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Chat panel -->
+                    <div id="chatPanel" style="flex:1;display:flex;flex-direction:column;">
+                        <div id="chatHeader" style="padding:14px 20px;border-bottom:1px solid #e0e0e0;font-weight:600;background:#fff;display:flex;align-items:center;gap:10px;">
+                            <span id="chatWithName" style="color:#999;">Select a conversation</span>
+                        </div>
+                        <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;">
+                        </div>
+                        <div id="chatInputArea" style="padding:12px 16px;border-top:1px solid #e0e0e0;display:none;align-items:center;gap:8px;">
+                            <input type="text" id="chatMessageInput" placeholder="Type a message..." style="flex:1;padding:10px 14px;border:1px solid #ddd;border-radius:20px;font-size:0.95rem;outline:none;">
+                            <button id="chatSendBtn" class="primary-btn" style="border-radius:50%;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -523,11 +383,25 @@
                     <textarea id="quickDetails" rows="4" placeholder="Describe what you need..."></textarea>
                 </div>
                 
-                <button type="submit" class="primary-btn">
+                <button type="submit" class="primary-btn" id="quickBookSubmitBtn">
                     <i class="fas fa-search"></i>
                     Find Providers
                 </button>
             </form>
+
+            <!-- inDrive-style waiting area for Quick Book -->
+            <div id="quickBookStatusArea" style="display:none;margin-top:16px;padding:16px;background:#f8f9fa;border-radius:10px;text-align:center;">
+                <div id="quickBookSpinner" style="margin-bottom:10px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;color:#e91e8c;"></i>
+                </div>
+                <div id="quickBookStatusText" style="font-weight:600;color:#333;margin-bottom:6px;">Searching for providers...</div>
+                <div id="quickBookStatusSub" style="font-size:0.85rem;color:#888;"></div>
+                <div id="quickBookAttemptInfo" style="font-size:0.85rem;color:#666;margin-top:6px;"></div>
+                <button type="button" id="quickBookCancelBtn" class="outline-btn" style="margin-top:12px;border-color:#dc3545;color:#dc3545;">
+                    <i class="fas fa-times"></i>
+                    Cancel Search
+                </button>
+            </div>
         </div>
     </div>
 
@@ -541,157 +415,35 @@
         </div>
     </div>
 
-    <!-- Purchase Good Modal -->
-    <div id="purchaseGoodModal" class="modal">
-        <div class="modal-content">
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content" style="max-width:450px;">
             <span class="close">&times;</span>
-            <div id="purchaseGoodContent"></div>
+            <h2>Leave a Review</h2>
+            <p id="reviewServiceName" style="color:#666;margin-bottom:16px;"></p>
+            <div id="starRatingInput" style="display:flex;gap:6px;font-size:2rem;cursor:pointer;margin-bottom:16px;">
+                <i class="far fa-star" data-star="1" style="color:#ddd;transition:color 0.15s;"></i>
+                <i class="far fa-star" data-star="2" style="color:#ddd;transition:color 0.15s;"></i>
+                <i class="far fa-star" data-star="3" style="color:#ddd;transition:color 0.15s;"></i>
+                <i class="far fa-star" data-star="4" style="color:#ddd;transition:color 0.15s;"></i>
+                <i class="far fa-star" data-star="5" style="color:#ddd;transition:color 0.15s;"></i>
+            </div>
+            <div class="form-group">
+                <label for="reviewComment">Comment (optional)</label>
+                <textarea id="reviewComment" rows="4" placeholder="Tell us about your experience..."></textarea>
+            </div>
+            <button id="submitReviewBtn" class="primary-btn" style="width:100%;margin-top:8px;">
+                <i class="fas fa-paper-plane"></i>
+                Submit Review
+            </button>
         </div>
     </div>
 
     <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/api.js"></script>
     <script src="js/dashboard.js"></script>
     
-    <script>
-        // Stellar P2P Lending Demo Functions
-        async function testStellarWallet() {
-            try {
-                // Check if user is logged in
-                if (!window.api || !window.api.token) {
-                    alert('Please login first!');
-                    return;
-                }
-    
-                const response = await fetch('/api/wallet/create', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${window.api.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    document.getElementById('walletResult').innerHTML = `
-                        <div style="background: white; padding: 15px; border-radius: 8px; border: 2px solid #28a745;">
-                            <h4 style="color: #28a745; margin-top: 0;">✅ Demo Stellar Wallet Created!</h4>
-                            <p><strong>Public Key:</strong> <code>${result.public_key}</code></p>
-                            <p><strong>Balance:</strong> <strong>${result.balance} XLM</strong> (demo)</p>
-                            <p><strong>Secret Key:</strong> <code style="font-size: 0.8em;">${result.secret_key}</code></p>
-                            <p style="color: #666; font-size: 0.9em; background: #f8f9fa; padding: 8px; border-radius: 4px;">
-                                ${result.demo_note}
-                            </p>
-                            <div style="margin-top: 15px;">
-                                <button onclick="testSendPayment('${result.secret_key}', '${result.public_key}')" 
-                                        class="btn btn-success" style="margin-right: 10px;">
-                                    💸 Test Send Payment
-                                </button>
-                                <button onclick="testCreditScore()" class="btn btn-info">
-                                    📊 Test Credit Score
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    document.getElementById('walletResult').innerHTML = `
-                        <div style="background: #ffebee; padding: 15px; border-radius: 8px; color: #c62828;">
-                            <strong>Error:</strong> ${result.error}
-                        </div>
-                    `;
-                }
-            } catch (error) {
-                console.error('Test failed:', error);
-                document.getElementById('walletResult').innerHTML = `
-                    <div style="background: #ffebee; padding: 15px; border-radius: 8px; color: #c62828;">
-                        <strong>Connection Error:</strong> ${error.message}<br>
-                        Make sure your backend server is running on port 5000!
-                    </div>
-                `;
-            }
-        }
-    
-        async function testSendPayment(secretKey, publicKey) {
-            const recipientKey = "GDEMORECIPIENT123456789012345678901234567890123456";
-            
-            try {
-                const response = await fetch('/api/wallet/send', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${window.api.token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        sender_secret_key: secretKey,
-                        recipient_public_key: recipientKey,
-                        amount: 50,
-                        memo: "Test payment from TireloPesa Demo"
-                    })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert(`✅ Payment Successful!\n\nTransaction Hash: ${result.transaction_hash}\nAmount: ${result.amount} XLM\nFee: ${result.fee} XLM\n\n${result.message}`);
-                } else {
-                    alert(`❌ Payment Failed:\n${result.error}`);
-                }
-            } catch (error) {
-                alert(`❌ Connection Error:\n${error.message}`);
-            }
-        }
-    
-        async function testCreditScore() {
-            try {
-                const response = await fetch('/api/credit/score', {
-                    headers: {
-                        'Authorization': `Bearer ${window.api.token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert(`📊 Your Credit Score: ${result.score}/850\n\nFactors considered:\n• ${result.factors.service_ratings}\n• ${result.factors.transaction_history}\n• ${result.factors.account_activity}`);
-                } else {
-                    alert(`❌ Failed to get credit score:\n${result.error}`);
-                }
-            } catch (error) {
-                alert(`❌ Connection Error:\n${error.message}`);
-            }
-        }
-    
-        async function testServiceRating() {
-            const rating = prompt('Enter a service rating (1-5):', '4.5');
-            if (rating && !isNaN(rating)) {
-                try {
-                    const response = await fetch('/api/credit/update-from-rating', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${window.api.token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            rating: parseFloat(rating),
-                            service_completed: 'Hair Styling Service'
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        alert(`⭐ Rating Impact:\n\n${result.message}\n\nPrevious Score: ${result.previous_score}\nNew Score: ${result.new_score}\nChange: ${result.change > 0 ? '+' : ''}${result.change} points\n\nFinancial Impact: ${result.financial_impact.loan_approval_chance}`);
-                    } else {
-                        alert(`❌ Failed to update credit score:\n${result.error}`);
-                    }
-                } catch (error) {
-                    alert(`❌ Connection Error:\n${error.message}`);
-                }
-            }
-        }
-        </script>
 
 </body>
 </html>

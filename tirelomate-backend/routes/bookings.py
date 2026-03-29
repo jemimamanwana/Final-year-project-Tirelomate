@@ -38,14 +38,29 @@ def create_booking():
     user = request.current_user
     data = request.get_json()
 
-    required = ["service_id", "provider_id", "date", "time"]
-    if not all(data.get(f) for f in required):
-        return jsonify({"error": "service_id, provider_id, date, and time are required"}), 400
+    service_id = data.get("service_id")
+    provider_id = data.get("provider_id")
+
+    if not service_id or not data.get("date") or not data.get("time"):
+        return jsonify({"error": "service_id, date, and time are required"}), 400
+
+    # Auto-lookup provider_id from the service if not provided
+    if not provider_id:
+        svc_result = (
+            supabase.table("services")
+            .select("provider_id")
+            .eq("id", service_id)
+            .execute()
+        )
+        if svc_result.data:
+            provider_id = svc_result.data[0]["provider_id"]
+        else:
+            return jsonify({"error": "Service not found"}), 404
 
     booking_data = {
         "customer_id": user["id"],
-        "provider_id": data["provider_id"],
-        "service_id": data["service_id"],
+        "provider_id": provider_id,
+        "service_id": service_id,
         "date": data["date"],
         "time": data["time"],
         "total_price": data.get("total_price"),
@@ -68,7 +83,7 @@ def update_booking(booking_id):
     if not status:
         return jsonify({"error": "Status is required"}), 400
 
-    if status not in ("pending", "confirmed", "completed", "cancelled"):
+    if status not in ("pending", "confirmed", "in_progress", "completed", "cancelled"):
         return jsonify({"error": "Invalid status"}), 400
 
     result = (
