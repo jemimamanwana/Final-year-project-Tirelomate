@@ -1,7 +1,7 @@
 // API Integration for Agora Frontend
 // This file handles all communication with the backend API
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://final-year-project-tirelomate.vercel.app/api';
 
 // API Helper Functions
 class API {
@@ -279,6 +279,16 @@ class API {
             return await this.request(`/provider/bookings?${params.toString()}`);
         } catch (error) {
             throw new Error('Failed to fetch provider bookings: ' + error.message);
+        }
+    }
+
+    async getProviderBooking(id) {
+        try {
+            const all = await this.request('/provider/bookings?status=all');
+            if (!Array.isArray(all)) return null;
+            return all.find(b => String(b.id) === String(id)) || null;
+        } catch (error) {
+            throw new Error('Failed to fetch provider booking: ' + error.message);
         }
     }
 

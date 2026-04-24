@@ -1386,11 +1386,14 @@ footer {
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 20px;
+    aspect-ratio: 16 / 9;
+    background: var(--primary-light);
 }
 
 .service-modal-img img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     display: block;
 }
 

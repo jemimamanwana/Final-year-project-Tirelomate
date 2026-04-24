@@ -160,22 +160,69 @@ function updateUserDisplay() {
 // Navigation setup - similar to customer dashboard
 function setupNavigation() {
     const navLinks = document.querySelectorAll('.nav-link');
-    
+    const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             // Remove active class from all links
             navLinks.forEach(l => l.classList.remove('active'));
-            
-            // Add active class to clicked link
+            mobileNavItems.forEach(l => l.classList.remove('active'));
+
+            // Add active class to clicked link and matching mobile nav
             this.classList.add('active');
-            
-            // Show corresponding section
             const section = this.getAttribute('data-section');
+            const mobileMatch = document.querySelector(`.mobile-nav-item[data-section="${section}"]`);
+            if (mobileMatch) mobileMatch.classList.add('active');
+
             showSection(section);
         });
     });
+
+    // Mobile bottom nav
+    mobileNavItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // "More" toggle opens the bottom sheet instead of navigating
+            if (this.classList.contains('mobile-more-toggle')) {
+                const moreMenu = document.getElementById('mobileMoreMenu');
+                if (moreMenu) moreMenu.classList.add('open');
+                return;
+            }
+
+            mobileNavItems.forEach(l => l.classList.remove('active'));
+            navLinks.forEach(l => l.classList.remove('active'));
+
+            this.classList.add('active');
+            const section = this.getAttribute('data-section');
+            const sidebarMatch = document.querySelector(`.nav-link[data-section="${section}"]`);
+            if (sidebarMatch) sidebarMatch.classList.add('active');
+
+            showSection(section);
+        });
+    });
+
+    // Mobile "More" bottom sheet
+    const moreMenu = document.getElementById('mobileMoreMenu');
+    const moreOverlay = document.getElementById('mobileMoreOverlay');
+    if (moreMenu && moreOverlay) {
+        moreOverlay.addEventListener('click', () => moreMenu.classList.remove('open'));
+        moreMenu.querySelectorAll('.mobile-more-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                moreMenu.classList.remove('open');
+                const section = this.getAttribute('data-section');
+                if (!section) return;
+                mobileNavItems.forEach(l => l.classList.remove('active'));
+                navLinks.forEach(l => l.classList.remove('active'));
+                const sidebarMatch = document.querySelector(`.nav-link[data-section="${section}"]`);
+                if (sidebarMatch) sidebarMatch.classList.add('active');
+                showSection(section);
+            });
+        });
+    }
 }
 
 // Show section
@@ -253,7 +300,7 @@ async function loadDashboardData() {
         const recent = bookings.slice(0, 3).map(b => ({
             serviceName: b.service_title || 'Service',
             clientName: b.customer_name || 'Client',
-            clientAvatar: b.customer_avatar || 'https://via.placeholder.com/40?text=C',
+            clientAvatar: b.customer_avatar || "data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='%23ffe6f2'/%3E%3Ccircle%20cx='50'%20cy='40'%20r='16'%20fill='%23B20062'%20opacity='0.55'/%3E%3Cpath%20d='M18,88%20Q18,60%2050,60%20Q82,60%2082,88%20Z'%20fill='%23B20062'%20opacity='0.55'/%3E%3C/svg%3E",
             date: b.date,
             time: b.time,
             status: b.status
@@ -293,7 +340,7 @@ async function loadServices() {
                     bookings: 0,
                     reviews: 0,
                     status: s.is_active === false ? 'inactive' : 'active',
-                    image: s.image || 'https://via.placeholder.com/80?text=Service'
+                    image: s.image || "data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20600%20400'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23ffe6f2'/%3E%3Cstop%20offset='1'%20stop-color='%23ffcce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20fill='url(%23g)'%20width='600'%20height='400'/%3E%3Cg%20transform='translate(300,180)'%20fill='%23B20062'%20opacity='0.45'%3E%3Ccircle%20r='46'%20fill='%23fff'%20opacity='0.6'/%3E%3Cpath%20d='M-22,-8%20L-22,18%20L22,18%20L22,-8%20L7,-8%20L0,-20%20L-7,-8%20Z%20M-14,-2%20L14,-2%20L14,12%20L-14,12%20Z'/%3E%3C/g%3E%3Ctext%20x='300'%20y='280'%20text-anchor='middle'%20font-family='Arial,sans-serif'%20font-size='18'%20font-weight='600'%20fill='%23B20062'%20opacity='0.7'%3EService%3C/text%3E%3C/svg%3E"
                 }));
                 renderServices(currentServices);
                 return;
@@ -351,7 +398,7 @@ function renderServices(services) {
                     <tr>
                         <td>
                             <div class="service-info">
-                                <img src="${service.image}" alt="${service.title}" width="40" height="40">
+                                <img src="${service.image}" alt="${service.title}" width="40" height="40" style="border-radius:6px;object-fit:cover;" onerror="this.onerror=null;this.src=&quot;data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Crect%20fill='%23ffe6f2'%20width='100'%20height='100'%20rx='8'/%3E%3Cg%20transform='translate(50,50)'%20fill='%23B20062'%20opacity='0.5'%3E%3Cpath%20d='M-12,-5%20L-12,10%20L12,10%20L12,-5%20L4,-5%20L0,-12%20L-4,-5%20Z'/%3E%3C/g%3E%3C/svg%3E&quot;">
                                 <div>
                                     <div class="service-name">${service.title}</div>
                                     <div class="service-duration">${service.duration}</div>
@@ -405,57 +452,109 @@ async function loadBookings() {
     if (!currentBookings.length) showLoading('bookingsTable');
     try {
         if (window.auth && window.auth.isLoggedIn()) {
-            // Map API bookings to UI shape
-            const statusFilter = activeTab === 'upcoming' ? 'upcoming' : activeTab;
-            console.log('loadBookings: fetching with status =', statusFilter);
-            const apiBookings = await window.api.getProviderBookings(statusFilter);
-            console.log('loadBookings: API returned', Array.isArray(apiBookings) ? apiBookings.length : 0, 'bookings');
+            const apiBookings = await window.api.getProviderBookings('all');
             if (Array.isArray(apiBookings)) {
                 const mapped = apiBookings.map(b => ({
                     id: b.id,
                     customer_id: b.customer_id,
                     serviceName: b.service_title || 'Service',
                     clientName: b.customer_name || 'Client',
-                    clientAvatar: b.customer_avatar || 'https://via.placeholder.com/40?text=C',
+                    clientAvatar: b.customer_avatar || '',
                     date: b.date,
                     time: b.time,
                     status: b.status,
+                    notes: b.notes || '',
                     price: b.service_price || b.total_price || b.price || 0
                 }));
-                // Detect new upcoming bookings and notify
-                if (activeTab === 'upcoming') {
-                    const newOnes = mapped.filter(b => !knownUpcomingBookingIds.has(b.id));
-                    if (newOnes.length > 0) {
-                        newOnes.forEach(b => knownUpcomingBookingIds.add(b.id));
-                        try { showNotification(`${newOnes.length} new booking request(s)`, 'success'); } catch (_) {}
-                    }
-                    // Keep set in sync by removing ones no longer present
-                    const currentIds = new Set(mapped.map(b => b.id));
-                    Array.from(knownUpcomingBookingIds).forEach(id => { if (!currentIds.has(id)) knownUpcomingBookingIds.delete(id); });
-                }
                 currentBookings = mapped;
-                renderBookings(currentBookings);
+                filterAndRenderBookings();
+                await _handleBookingDeepLink();
                 return;
             }
         }
     } catch (error) {
         console.warn('Could not load bookings:', error.message);
     }
-
-    // No demo data – show empty state
     currentBookings = [];
-    renderBookings(currentBookings);
+    filterAndRenderBookings();
+    await _handleBookingDeepLink();
+}
+
+// Run once per page load
+let _deepLinkHandled = false;
+async function _handleBookingDeepLink() {
+    if (_deepLinkHandled) return;
+    const params = new URLSearchParams(window.location.search);
+    const bookingId = params.get('booking');
+    const action = params.get('action');
+    if (!bookingId || action !== 'review') return;
+    _deepLinkHandled = true;
+
+    // Switch to the Bookings section so the modal opens in the right context
+    if (typeof showSection === 'function') {
+        try { showSection('bookings'); } catch (e) { /* ignore */ }
+    }
+
+    let booking = currentBookings.find(b => String(b.id) === String(bookingId));
+
+    // Not in the current filtered list — fetch it directly
+    if (!booking && window.api && typeof window.api.getProviderBooking === 'function') {
+        try {
+            const fetched = await window.api.getProviderBooking(bookingId);
+            if (fetched) {
+                booking = {
+                    id: fetched.id,
+                    customer_id: fetched.customer_id,
+                    serviceName: fetched.service_title || 'Service',
+                    clientName: fetched.customer_name || 'Client',
+                    clientAvatar: fetched.customer_avatar || '',
+                    date: fetched.date,
+                    time: fetched.time,
+                    status: fetched.status,
+                    notes: fetched.notes || '',
+                    price: fetched.service_price || fetched.total_price || fetched.price || 0
+                };
+                // Add to local list so viewBookingDetails can find it
+                if (!currentBookings.find(b => String(b.id) === String(booking.id))) {
+                    currentBookings.push(booking);
+                }
+            }
+        } catch (e) {
+            console.warn('Deep-link fetch failed:', e.message);
+        }
+    }
+
+    if (booking && typeof viewBookingDetails === 'function') {
+        viewBookingDetails(booking.id);
+        const modal = document.getElementById('bookingDetailsModal');
+        if (modal) modal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Strip query params so refresh doesn't re-trigger
+    try {
+        const cleanUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl);
+    } catch (e) { /* ignore */ }
+}
+
+function filterAndRenderBookings() {
+    let filtered;
+    if (activeTab === 'upcoming') {
+        filtered = currentBookings.filter(b => ['pending', 'confirmed', 'in_progress'].includes(b.status));
+    } else if (activeTab === 'completed') {
+        filtered = currentBookings.filter(b => b.status === 'completed');
+    } else if (activeTab === 'cancelled') {
+        filtered = currentBookings.filter(b => b.status === 'cancelled');
+    } else {
+        filtered = currentBookings;
+    }
+    renderBookings(filtered);
 }
 
 // Periodically poll for new bookings and refresh dashboard stats
 setInterval(() => {
     if (window.auth && window.auth.isLoggedIn()) {
-        // Always refresh bookings (for notifications)
-        const previousTab = activeTab;
-        activeTab = 'upcoming';
-        loadBookings().finally(() => { activeTab = previousTab; });
-
-        // Also refresh dashboard stats if on dashboard section
+        loadBookings();
         if (document.querySelector('#dashboard-section.active')) {
             loadDashboardData();
         }
@@ -643,65 +742,144 @@ function renderRecentBookings(bookings) {
     `;
 }
 
+// Cached bookings so period changes don't re-fetch
+let _earningsBookingsCache = null;
+
+function _getPrice(b) {
+    return parseFloat(b.service_price || b.price || b.total_price || 0);
+}
+
+function _filterByPeriod(bookings, period) {
+    if (period === 'all') return bookings;
+    const now = new Date();
+    const start = new Date(now);
+    if (period === 'today') { start.setHours(0,0,0,0); }
+    else if (period === 'week') { start.setDate(now.getDate() - 7); }
+    else if (period === 'month') { start.setMonth(now.getMonth() - 1); }
+    else if (period === 'year') { start.setFullYear(now.getFullYear() - 1); }
+    return bookings.filter(b => {
+        if (!b.date) return false;
+        return new Date(b.date) >= start;
+    });
+}
+
+function _groupByTime(completed, mode) {
+    const map = {};
+    for (const b of completed) {
+        if (!b.date) continue;
+        const d = new Date(b.date);
+        let key, label;
+        if (mode === 'week') {
+            const weekStart = new Date(d);
+            weekStart.setDate(d.getDate() - d.getDay());
+            key = weekStart.toISOString().slice(0, 10);
+            label = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        } else if (mode === 'year') {
+            key = `${d.getFullYear()}`;
+            label = `${d.getFullYear()}`;
+        } else {
+            key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            label = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        }
+        if (!map[key]) map[key] = { label, total: 0 };
+        map[key].total += _getPrice(b);
+    }
+    const sorted = Object.keys(map).sort();
+    return { labels: sorted.map(k => map[k].label), values: sorted.map(k => map[k].total) };
+}
+
+function _updateEarningsUI(bookings, earningsPeriod, breakdownPeriod) {
+    const all = Array.isArray(bookings) ? bookings : [];
+    const periodFiltered = _filterByPeriod(all.filter(b => b.status === 'completed'), earningsPeriod);
+    const allCompleted = all.filter(b => b.status === 'completed');
+    const cancelled = all.filter(b => b.status === 'cancelled');
+
+    const totalEarnings = periodFiltered.reduce((sum, b) => sum + _getPrice(b), 0);
+    const el = document.getElementById('totalEarningsAmount');
+    if (el) el.textContent = `P${totalEarnings.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    const completedJobsEl = document.getElementById('completedJobsCount');
+    const avgPerJobEl = document.getElementById('avgPerJob');
+    const cancellationRateEl = document.getElementById('cancellationRate');
+    if (completedJobsEl) completedJobsEl.textContent = periodFiltered.length;
+    if (avgPerJobEl) avgPerJobEl.textContent = periodFiltered.length ? `P${(_getPrice({ total_price: totalEarnings / periodFiltered.length })).toFixed(2)}` : 'P0.00';
+    if (cancellationRateEl) cancellationRateEl.textContent = all.length ? `${Math.round((cancelled.length / all.length) * 100)}%` : '0%';
+
+    // Compute change indicator
+    const changeEl = document.getElementById('earningsChange');
+    if (changeEl && earningsPeriod !== 'all') {
+        const prevStart = new Date();
+        const nowDate = new Date();
+        if (earningsPeriod === 'today') { prevStart.setDate(nowDate.getDate() - 1); }
+        else if (earningsPeriod === 'week') { prevStart.setDate(nowDate.getDate() - 14); }
+        else if (earningsPeriod === 'month') { prevStart.setMonth(nowDate.getMonth() - 2); }
+        else if (earningsPeriod === 'year') { prevStart.setFullYear(nowDate.getFullYear() - 2); }
+        const prevEnd = new Date();
+        if (earningsPeriod === 'today') { prevEnd.setDate(nowDate.getDate() - 1); prevEnd.setHours(23,59,59); }
+        else if (earningsPeriod === 'week') { prevEnd.setDate(nowDate.getDate() - 7); }
+        else if (earningsPeriod === 'month') { prevEnd.setMonth(nowDate.getMonth() - 1); }
+        else if (earningsPeriod === 'year') { prevEnd.setFullYear(nowDate.getFullYear() - 1); }
+        const prevCompleted = allCompleted.filter(b => {
+            if (!b.date) return false;
+            const d = new Date(b.date);
+            return d >= prevStart && d < prevEnd;
+        });
+        const prevTotal = prevCompleted.reduce((s, b) => s + _getPrice(b), 0);
+        if (prevTotal > 0) {
+            const pct = Math.round(((totalEarnings - prevTotal) / prevTotal) * 100);
+            const up = pct >= 0;
+            changeEl.innerHTML = `<i class="fas fa-arrow-${up ? 'up' : 'down'}"></i><span>${up ? '+' : ''}${pct}% from previous period</span>`;
+            changeEl.style.color = up ? '#2e7d32' : '#d32f2f';
+        } else {
+            changeEl.innerHTML = '<span>No previous data to compare</span>';
+            changeEl.style.color = '#6c757d';
+        }
+    } else if (changeEl) {
+        changeEl.innerHTML = '';
+    }
+
+    // Bar+line chart: revenue over time
+    const timeData = _groupByTime(allCompleted, breakdownPeriod);
+    initializeEarningsChart(timeData.labels, timeData.values);
+    initializeEarningsBreakdownChart(timeData.labels, timeData.values);
+
+    // Doughnut: by category (from period-filtered data)
+    const categoryMap = {};
+    for (const b of periodFiltered) {
+        const cat = b.service_category || 'Other';
+        categoryMap[cat] = (categoryMap[cat] || 0) + _getPrice(b);
+    }
+    initializeCategoryChart(Object.keys(categoryMap), Object.values(categoryMap));
+
+    // Transactions list (most recent first)
+    const transactions = periodFiltered
+        .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+        .map(b => ({
+            service: b.service_title || 'Service',
+            client: b.customer_name || 'Client',
+            amount: _getPrice(b),
+            date: b.date ? new Date(b.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+            status: 'completed'
+        }));
+    renderTransactions(transactions);
+}
+
 // Load earnings data from completed bookings
 async function loadEarnings() {
     showLoading('transactionsList');
     try {
         const allBookings = await window.api.getProviderBookings('all');
-        const bookings = Array.isArray(allBookings) ? allBookings : [];
-        const completed = bookings.filter(b => b.status === 'completed');
-        const totalEarnings = completed.reduce((sum, b) => sum + (parseFloat(b.service_price || b.price || b.total_price || 0)), 0);
+        _earningsBookingsCache = Array.isArray(allBookings) ? allBookings : [];
 
-        document.getElementById('totalEarningsAmount').textContent = `P${totalEarnings.toLocaleString()}`;
-
-        // Update earnings sub-stats
-        const cancelled = bookings.filter(b => b.status === 'cancelled');
-        const completedJobsEl = document.getElementById('completedJobsCount');
-        const avgPerJobEl = document.getElementById('avgPerJob');
-        const cancellationRateEl = document.getElementById('cancellationRate');
-        if (completedJobsEl) completedJobsEl.textContent = completed.length;
-        if (avgPerJobEl) avgPerJobEl.textContent = completed.length ? `P${(totalEarnings / completed.length).toFixed(2)}` : 'P0';
-        if (cancellationRateEl) cancellationRateEl.textContent = bookings.length ? `${Math.round((cancelled.length / bookings.length) * 100)}%` : '0%';
-
-        // Build chart data from completed bookings
-        const monthMap = {};
-        const categoryMap = {};
-        for (const b of completed) {
-            // Group by month
-            if (b.date) {
-                const d = new Date(b.date);
-                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-                const label = d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-                if (!monthMap[key]) monthMap[key] = { label, total: 0 };
-                monthMap[key].total += parseFloat(b.service_price || b.price || b.total_price || 0);
-            }
-            // Group by category
-            const cat = b.service_category || 'Other';
-            categoryMap[cat] = (categoryMap[cat] || 0) + parseFloat(b.service_price || b.price || b.total_price || 0);
-        }
-        const sortedMonths = Object.keys(monthMap).sort();
-        const monthLabels = sortedMonths.map(k => monthMap[k].label);
-        const monthEarnings = sortedMonths.map(k => monthMap[k].total);
-        initializeEarningsChart(monthLabels, monthEarnings);
-
-        const categoryLabels = Object.keys(categoryMap);
-        const categoryEarnings = categoryLabels.map(k => categoryMap[k]);
-        initializeEarningsBreakdownChart(categoryLabels, categoryEarnings);
-
-        // Show completed bookings as transactions
-        const transactions = completed.map(b => ({
-            service: b.service_title || 'Service',
-            client: b.customer_name || 'Client',
-            amount: parseFloat(b.service_price || b.price || b.total_price || 0),
-            date: b.date ? new Date(b.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
-            status: 'completed'
-        }));
-        renderTransactions(transactions);
+        const earningsPeriod = (document.getElementById('totalEarningsPeriod') || {}).value || 'all';
+        const breakdownPeriod = (document.getElementById('earningsBreakdownPeriod') || {}).value || 'month';
+        _updateEarningsUI(_earningsBookingsCache, earningsPeriod, breakdownPeriod);
     } catch (error) {
         console.warn('Could not load earnings data:', error.message);
-        document.getElementById('totalEarningsAmount').textContent = 'P0';
+        document.getElementById('totalEarningsAmount').textContent = 'P0.00';
         initializeEarningsChart([], []);
         initializeEarningsBreakdownChart([], []);
+        initializeCategoryChart([], []);
         renderTransactions([]);
     }
 }
@@ -713,10 +891,10 @@ function renderTransactions(transactions) {
     
     if (transactions.length === 0) {
         transactionsList.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-exchange-alt"></i>
-                <h3>No transactions</h3>
-                <p>You don't have any transactions yet</p>
+            <div class="empty-state" style="padding:30px 20px;">
+                <i class="fas fa-receipt" style="font-size:2.5rem;color:#d1d5db;margin-bottom:12px;"></i>
+                <h3 style="font-size:1.1rem;margin-bottom:4px;">No transactions yet</h3>
+                <p style="font-size:0.88rem;">Completed bookings will appear here</p>
             </div>
         `;
         return;
@@ -726,11 +904,12 @@ function renderTransactions(transactions) {
         <div class="transaction-item">
             <div class="transaction-info">
                 <div class="transaction-service">${transaction.service}</div>
-                <div class="transaction-client">${transaction.client}</div>
+                <div class="transaction-client"><i class="fas fa-user" style="font-size:0.7rem;margin-right:4px;opacity:0.5;"></i>${transaction.client}</div>
             </div>
-            <div class="transaction-amount">P${transaction.amount}</div>
-            <div class="transaction-date">${transaction.date}</div>
-            <div class="transaction-status success">${transaction.status}</div>
+            <div style="text-align:right;">
+                <div class="transaction-amount" style="color:#2e7d32;font-weight:700;">+P${transaction.amount.toLocaleString('en-US', {minimumFractionDigits:2})}</div>
+                <div class="transaction-date" style="font-size:0.78rem;color:#9ca3af;">${transaction.date}</div>
+            </div>
         </div>
     `).join('');
 }
@@ -738,6 +917,7 @@ function renderTransactions(transactions) {
 // Chart instances (stored so we can destroy before re-creating)
 let _earningsChartInstance = null;
 let _breakdownChartInstance = null;
+let _categoryChartInstance = null;
 
 // Initialize earnings bar+line chart with real data
 function initializeEarningsChart(monthLabels, monthEarnings) {
@@ -791,39 +971,148 @@ function initializeEarningsChart(monthLabels, monthEarnings) {
     });
 }
 
-// Initialize earnings breakdown doughnut chart with real data
+// The breakdown chart is now the bar/line "Revenue Over Time" chart
+// The old earningsBreakdownChart canvas is reused for this purpose
 function initializeEarningsBreakdownChart(categoryLabels, categoryEarnings) {
     const canvas = document.getElementById('earningsBreakdownChart');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // Destroy previous instance
     if (_breakdownChartInstance) { _breakdownChartInstance.destroy(); _breakdownChartInstance = null; }
 
+    const labels = categoryLabels && categoryLabels.length ? categoryLabels : ['No data'];
+    const values = categoryEarnings && categoryEarnings.length ? categoryEarnings : [0];
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(178, 0, 98, 0.25)');
+    gradient.addColorStop(1, 'rgba(178, 0, 98, 0.02)');
+
+    _breakdownChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Revenue',
+                    data: values,
+                    backgroundColor: gradient,
+                    borderColor: 'rgba(178, 0, 98, 0.8)',
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    order: 2
+                },
+                {
+                    label: 'Trend',
+                    data: values,
+                    type: 'line',
+                    borderColor: '#4361ee',
+                    borderWidth: 2.5,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#4361ee',
+                    pointBorderWidth: 2.5,
+                    pointHoverRadius: 7,
+                    fill: false,
+                    order: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { intersect: false, mode: 'index' },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(26,26,46,0.92)',
+                    titleFont: { size: 13, weight: '600' },
+                    bodyFont: { size: 12 },
+                    padding: 12,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: function(ctx) {
+                            if (ctx.datasetIndex === 1) return null;
+                            return ' P' + ctx.parsed.y.toLocaleString('en-US', {minimumFractionDigits:2});
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                    ticks: {
+                        callback: v => 'P' + v.toLocaleString(),
+                        font: { size: 11 },
+                        color: '#9ca3af'
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 }, color: '#6b7280' }
+                }
+            }
+        }
+    });
+}
+
+// Initialize category doughnut chart
+function initializeCategoryChart(categoryLabels, categoryEarnings) {
+    const canvas = document.getElementById('earningsCategoryChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    if (_categoryChartInstance) { _categoryChartInstance.destroy(); _categoryChartInstance = null; }
+
     const colors = [
-        'rgba(233, 30, 140, 0.8)', 'rgba(67, 97, 238, 0.8)', 'rgba(40, 167, 69, 0.8)',
-        'rgba(245, 166, 35, 0.8)', 'rgba(108, 99, 255, 0.8)', 'rgba(23, 162, 184, 0.8)',
-        'rgba(220, 53, 69, 0.8)', 'rgba(111, 66, 193, 0.8)'
+        '#B20062', '#4361ee', '#28a745', '#f5a623',
+        '#6c63ff', '#17a2b8', '#dc3545', '#6f42c1'
     ];
 
     const labels = categoryLabels && categoryLabels.length ? categoryLabels : ['No data'];
     const values = categoryEarnings && categoryEarnings.length ? categoryEarnings : [1];
 
-    _breakdownChartInstance = new Chart(ctx, {
+    _categoryChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels,
             datasets: [{
                 data: values,
                 backgroundColor: labels.map((_, i) => colors[i % colors.length]),
-                borderWidth: 0
+                borderWidth: 2,
+                borderColor: '#fff',
+                hoverOffset: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'right' } },
-            cutout: '70%'
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyleWidth: 10,
+                        font: { size: 12 }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26,26,46,0.92)',
+                    padding: 12,
+                    cornerRadius: 10,
+                    callbacks: {
+                        label: function(ctx) {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = total ? Math.round((ctx.parsed / total) * 100) : 0;
+                            return ` ${ctx.label}: P${ctx.parsed.toLocaleString('en-US', {minimumFractionDigits:2})} (${pct}%)`;
+                        }
+                    }
+                }
+            },
+            cutout: '65%'
         }
     });
 }
@@ -837,7 +1126,7 @@ function setupEventListeners() {
             tabBtns.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             activeTab = this.getAttribute('data-tab');
-            loadBookings();
+            filterAndRenderBookings();
         });
     });
     
@@ -883,14 +1172,17 @@ function setupEventListeners() {
         contactForm.addEventListener('submit', handleSupportMessage);
     }
     
-    // Period selectors
-    const periodSelectors = document.querySelectorAll('select[id$="Period"]');
-    periodSelectors.forEach(select => {
-        select.addEventListener('change', () => {
-            // In a real app, this would reload data for the selected period
-            console.log(`Period changed to ${select.value}`);
-        });
-    });
+    // Period selectors — re-render earnings from cache when changed
+    const totalPeriodSel = document.getElementById('totalEarningsPeriod');
+    const breakdownPeriodSel = document.getElementById('earningsBreakdownPeriod');
+    const refreshEarnings = () => {
+        if (!_earningsBookingsCache) return;
+        const ep = (totalPeriodSel || {}).value || 'all';
+        const bp = (breakdownPeriodSel || {}).value || 'month';
+        _updateEarningsUI(_earningsBookingsCache, ep, bp);
+    };
+    if (totalPeriodSel) totalPeriodSel.addEventListener('change', refreshEarnings);
+    if (breakdownPeriodSel) breakdownPeriodSel.addEventListener('change', refreshEarnings);
 }
 
 // Modal functions - similar to customer dashboard
@@ -1234,7 +1526,7 @@ async function updateProfile(e) {
     try {
         if (window.auth && window.auth.isLoggedIn() && currentUser.id) {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`http://localhost:5000/api/user/${currentUser.id}`, {
+            const res = await fetch(`https://final-year-project-tirelomate.vercel.app/api/user/${currentUser.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ name, phone })
@@ -1410,24 +1702,32 @@ async function loadProviderReviews() {
         if (!container) return;
 
         if (!Array.isArray(reviews) || reviews.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="padding:40px;text-align:center;color:#999;"><i class="fas fa-star" style="font-size:2rem;margin-bottom:8px;"></i><p>No reviews yet</p></div>';
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-star"></i><p>No reviews yet</p></div>';
             return;
         }
 
         container.innerHTML = reviews.map(r => {
-            const stars = '<i class="fas fa-star" style="color:#f5a623;"></i>'.repeat(r.rating) + '<i class="far fa-star" style="color:#ddd;"></i>'.repeat(5 - r.rating);
+            const stars = '<i class="fas fa-star"></i>'.repeat(r.rating) + '<i class="far fa-star" style="color:#ddd;"></i>'.repeat(5 - r.rating);
             const date = r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+            const name = r.customer_name || 'Customer';
+            const initial = name.charAt(0).toUpperCase();
+            const colors = ['#e91e8c', '#6c63ff', '#28a745', '#f5a623', '#17a2b8', '#dc3545', '#6f42c1', '#fd7e14'];
+            const color = colors[initial.charCodeAt(0) % colors.length];
+            const avatarHtml = (r.customer_avatar && r.customer_avatar.startsWith('http') && !r.customer_avatar.includes('placeholder'))
+                ? `<img src="${r.customer_avatar}" alt="${name}" class="review-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                  + `<div class="review-avatar-initial" style="display:none;background:${color};">${initial}</div>`
+                : `<div class="review-avatar-initial" style="background:${color};">${initial}</div>`;
             return `
-                <div style="padding:16px;border:1px solid #eee;border-radius:10px;margin-bottom:12px;background:#fff;">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-                        <img src="${r.customer_avatar || 'https://via.placeholder.com/36?text=C'}" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">
-                        <div style="flex:1;">
-                            <div style="font-weight:600;font-size:0.95rem;">${r.customer_name || 'Customer'}</div>
-                            <div style="font-size:0.8rem;color:#aaa;">${date}</div>
+                <div class="review-card">
+                    <div class="review-header">
+                        ${avatarHtml}
+                        <div class="review-meta">
+                            <div class="review-name">${name}</div>
+                            <div class="review-date">${date}</div>
                         </div>
-                        <div style="font-size:0.95rem;">${stars}</div>
+                        <div class="review-stars">${stars}</div>
                     </div>
-                    ${r.comment ? `<p style="margin:0;color:#555;font-size:0.9rem;line-height:1.5;">${r.comment}</p>` : '<p style="margin:0;color:#bbb;font-style:italic;font-size:0.85rem;">No comment</p>'}
+                    ${r.comment ? `<p class="review-comment">${r.comment}</p>` : '<p class="review-no-comment">No comment</p>'}
                 </div>
             `;
         }).join('');
@@ -1471,25 +1771,35 @@ async function loadConversations(silent = false) {
     try {
         const convos = await window.messaging.getConversations();
         if (!Array.isArray(convos) || convos.length === 0) {
-            if (!silent) container.innerHTML = '<div class="empty-state" style="padding:40px 16px;text-align:center;color:#999;"><i class="fas fa-comments" style="font-size:2rem;margin-bottom:8px;"></i><p>No conversations yet</p></div>';
+            if (!silent) container.innerHTML = '<div class="empty-state" style="padding:40px 16px;"><i class="fas fa-comments"></i><p>No conversations yet</p></div>';
             return;
         }
 
-        container.innerHTML = convos.map(c => `
-            <div class="convo-item" data-user-id="${c.user_id}" style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;transition:background 0.15s;${_activeChatUserId === c.user_id ? 'background:#e8e0f7;' : ''}" onmouseover="this.style.background='#f0ecf9'" onmouseout="this.style.background='${_activeChatUserId === c.user_id ? '#e8e0f7' : ''}'">
-                <img src="${c.user_avatar || 'https://via.placeholder.com/40?text=U'}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.user_name}</div>
-                    <div style="font-size:0.8rem;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.is_mine ? 'You: ' : ''}${c.last_message}</div>
+        container.innerHTML = convos.map(c => {
+            const name = c.user_name || 'User';
+            const initial = name.charAt(0).toUpperCase();
+            const colors = ['#e91e8c', '#6c63ff', '#28a745', '#f5a623', '#17a2b8', '#dc3545', '#6f42c1', '#fd7e14'];
+            const color = colors[initial.charCodeAt(0) % colors.length];
+            const avatarHtml = (c.user_avatar && c.user_avatar.startsWith('http') && !c.user_avatar.includes('placeholder'))
+                ? `<img src="${c.user_avatar}" alt="${name}" class="convo-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                  + `<div class="convo-avatar" style="display:none;background:${color};color:#fff;font-weight:700;justify-content:center;align-items:center;font-size:1rem;flex-shrink:0;">${initial}</div>`
+                : `<div class="convo-avatar" style="background:${color};color:#fff;display:flex;font-weight:700;justify-content:center;align-items:center;font-size:1rem;flex-shrink:0;">${initial}</div>`;
+            return `
+            <div class="convo-item${_activeChatUserId === c.user_id ? ' active' : ''}" data-user-id="${c.user_id}">
+                ${avatarHtml}
+                <div class="convo-info">
+                    <div class="convo-name">${name}</div>
+                    <div class="convo-preview">${c.is_mine ? 'You: ' : ''}${c.last_message}</div>
                 </div>
-                <div style="font-size:0.7rem;color:#aaa;white-space:nowrap;">${_timeAgo(c.last_message_at)}</div>
+                <div class="convo-time">${_timeAgo(c.last_message_at)}</div>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         container.querySelectorAll('.convo-item').forEach(el => {
             el.addEventListener('click', () => {
                 const uid = el.getAttribute('data-user-id');
-                const name = el.querySelector('div[style*="font-weight:600"]').textContent;
+                const name = el.querySelector('.convo-name').textContent;
                 _selectConversation(uid, name);
             });
         });
@@ -1526,9 +1836,9 @@ async function _loadChatThread(userId) {
 
         container.innerHTML = messages.map(m => {
             const isMine = m.sender_id === _currentUserId;
-            return `<div style="max-width:70%;padding:10px 14px;border-radius:16px;font-size:0.9rem;line-height:1.4;word-wrap:break-word;${isMine ? 'align-self:flex-end;background:#e91e8c;color:#fff;border-bottom-right-radius:4px;' : 'align-self:flex-start;background:#f0f0f0;color:#333;border-bottom-left-radius:4px;'}">
+            return `<div class="chat-bubble ${isMine ? 'mine' : 'theirs'}">
                 ${m.content}
-                <div style="font-size:0.65rem;margin-top:4px;opacity:0.7;text-align:${isMine ? 'right' : 'left'};">${_timeAgo(m.created_at)}</div>
+                <div class="bubble-time">${_timeAgo(m.created_at)}</div>
             </div>`;
         }).join('');
 
@@ -1556,8 +1866,11 @@ async function _sendMessage(userId) {
 function openMessageWithUser(userId, userName) {
     showSection('messages');
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
     const msgLink = document.querySelector('.nav-link[data-section="messages"]');
     if (msgLink) msgLink.classList.add('active');
+    const msgMobile = document.querySelector('.mobile-nav-item[data-section="messages"]');
+    if (msgMobile) msgMobile.classList.add('active');
     setTimeout(() => _selectConversation(userId, userName || 'User'), 300);
 }
 
