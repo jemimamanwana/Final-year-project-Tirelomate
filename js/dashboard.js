@@ -125,22 +125,69 @@ function updateUserDisplay() {
 // Navigation setup
 function setupNavigation() {
     const navLinks = document.querySelectorAll('.nav-link');
-    
+    const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             // Remove active class from all links
             navLinks.forEach(l => l.classList.remove('active'));
-            
-            // Add active class to clicked link
+            mobileNavItems.forEach(l => l.classList.remove('active'));
+
+            // Add active class to clicked link and matching mobile nav
             this.classList.add('active');
-            
-            // Show corresponding section
             const section = this.getAttribute('data-section');
+            const mobileMatch = document.querySelector(`.mobile-nav-item[data-section="${section}"]`);
+            if (mobileMatch) mobileMatch.classList.add('active');
+
             showSection(section);
         });
     });
+
+    // Mobile bottom nav
+    mobileNavItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // "More" toggle opens the bottom sheet instead of navigating
+            if (this.classList.contains('mobile-more-toggle')) {
+                const moreMenu = document.getElementById('mobileMoreMenu');
+                if (moreMenu) moreMenu.classList.add('open');
+                return;
+            }
+
+            mobileNavItems.forEach(l => l.classList.remove('active'));
+            navLinks.forEach(l => l.classList.remove('active'));
+
+            this.classList.add('active');
+            const section = this.getAttribute('data-section');
+            const sidebarMatch = document.querySelector(`.nav-link[data-section="${section}"]`);
+            if (sidebarMatch) sidebarMatch.classList.add('active');
+
+            showSection(section);
+        });
+    });
+
+    // Mobile "More" bottom sheet
+    const moreMenu = document.getElementById('mobileMoreMenu');
+    const moreOverlay = document.getElementById('mobileMoreOverlay');
+    if (moreMenu && moreOverlay) {
+        moreOverlay.addEventListener('click', () => moreMenu.classList.remove('open'));
+        moreMenu.querySelectorAll('.mobile-more-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                moreMenu.classList.remove('open');
+                const section = this.getAttribute('data-section');
+                if (!section) return;
+                mobileNavItems.forEach(l => l.classList.remove('active'));
+                navLinks.forEach(l => l.classList.remove('active'));
+                const sidebarMatch = document.querySelector(`.nav-link[data-section="${section}"]`);
+                if (sidebarMatch) sidebarMatch.classList.add('active');
+                showSection(section);
+            });
+        });
+    }
 }
 
 // Show section
@@ -204,7 +251,7 @@ async function loadServices() {
                     lng: customerLocation.lng
                 });
                 if (category !== 'all') params.append('category', category);
-                const res = await fetch(`http://localhost:5000/api/services/nearby?${params}`);
+                const res = await fetch(`https://final-year-project-tirelomate.vercel.app/api/services/nearby?${params}`);
                 if (res.ok) {
                     apiServices = await res.json();
                     console.log('Nearby endpoint returned', apiServices.length, 'services');
@@ -251,10 +298,10 @@ async function loadServices() {
                 price: s.price,
                 rating: s.rating || 0,
                 reviews: s.reviews_count || 0,
-                image: s.image || 'https://via.placeholder.com/600x400?text=Service+Image',
+                image: s.image || "data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20600%20400'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23ffe6f2'/%3E%3Cstop%20offset='1'%20stop-color='%23ffcce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20fill='url(%23g)'%20width='600'%20height='400'/%3E%3Cg%20transform='translate(300,180)'%20fill='%23B20062'%20opacity='0.45'%3E%3Ccircle%20r='46'%20fill='%23fff'%20opacity='0.6'/%3E%3Cpath%20d='M-22,-8%20L-22,18%20L22,18%20L22,-8%20L7,-8%20L0,-20%20L-7,-8%20Z%20M-14,-2%20L14,-2%20L14,12%20L-14,12%20Z'/%3E%3C/g%3E%3Ctext%20x='300'%20y='280'%20text-anchor='middle'%20font-family='Arial,sans-serif'%20font-size='18'%20font-weight='600'%20fill='%23B20062'%20opacity='0.7'%3EService%3C/text%3E%3C/svg%3E",
                 provider: {
                     name: s.provider_name || 'Service Provider',
-                    avatar: s.provider_avatar || 'https://via.placeholder.com/100?text=SP',
+                    avatar: s.provider_avatar || "data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='%23ffe6f2'/%3E%3Ccircle%20cx='50'%20cy='40'%20r='16'%20fill='%23B20062'%20opacity='0.55'/%3E%3Cpath%20d='M18,88%20Q18,60%2050,60%20Q82,60%2082,88%20Z'%20fill='%23B20062'%20opacity='0.55'/%3E%3C/svg%3E",
                     rating: 0,
                     completedJobs: 0
                 },
@@ -349,9 +396,11 @@ function renderServices(services) {
             ? `<span style="display:inline-block;background:#28a745;color:#fff;padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;margin-left:8px;"><i class="fas fa-map-marker-alt"></i> ${service.distance_km} km away</span>`
             : '';
 
+        const _svcFallback = "data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20600%20400'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23ffe6f2'/%3E%3Cstop%20offset='1'%20stop-color='%23ffcce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20fill='url(%23g)'%20width='600'%20height='400'/%3E%3Cg%20transform='translate(300,180)'%20fill='%23B20062'%20opacity='0.45'%3E%3Ccircle%20r='46'%20fill='%23fff'%20opacity='0.6'/%3E%3Cpath%20d='M-22,-8%20L-22,18%20L22,18%20L22,-8%20L7,-8%20L0,-20%20L-7,-8%20Z%20M-14,-2%20L14,-2%20L14,12%20L-14,12%20Z'/%3E%3C/g%3E%3Ctext%20x='300'%20y='280'%20text-anchor='middle'%20font-family='Arial,sans-serif'%20font-size='18'%20font-weight='600'%20fill='%23B20062'%20opacity='0.7'%3EService%3C/text%3E%3C/svg%3E";
+        const _avatarFallback = "data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='%23ffe6f2'/%3E%3Ccircle%20cx='50'%20cy='40'%20r='16'%20fill='%23B20062'%20opacity='0.55'/%3E%3Cpath%20d='M18,88%20Q18,60%2050,60%20Q82,60%2082,88%20Z'%20fill='%23B20062'%20opacity='0.55'/%3E%3C/svg%3E";
         serviceCard.innerHTML = `
             <div class="service-img">
-                <img src="${service.image}" alt="${service.title}" loading="lazy">
+                <img src="${service.image}" alt="${service.title}" loading="lazy" onerror="this.onerror=null;this.src='${_svcFallback}'">
             </div>
             <div class="service-info">
                 <h3>${service.title}${distanceBadge}</h3>
@@ -363,7 +412,7 @@ function renderServices(services) {
                     </div>
                 </div>
                 <div class="service-provider">
-                    <img src="${service.provider.avatar}" alt="${service.provider.name}" loading="lazy">
+                    <img src="${service.provider.avatar}" alt="${service.provider.name}" loading="lazy" onerror="this.onerror=null;this.src='${_avatarFallback}'">
                     <span>${service.provider.name}</span>
                 </div>
                 <button class="primary-btn book-service-btn" data-service-id="${service.id}">
@@ -465,6 +514,44 @@ async function loadBookings() {
     }
 
     renderBookings(filteredBookings);
+    _handleCustomerBookingDeepLink();
+}
+
+// Deep-link once-per-page guard
+let _customerDeepLinkHandled = false;
+
+async function _handleCustomerBookingDeepLink() {
+    if (_customerDeepLinkHandled) return;
+    const params = new URLSearchParams(window.location.search);
+    const bookingId = params.get('booking');
+    if (!bookingId) return;
+    _customerDeepLinkHandled = true;
+
+    // Switch to Bookings tab
+    if (typeof showSection === 'function') {
+        try { showSection('bookings'); } catch (e) { /* ignore */ }
+        const link = document.querySelector('.nav-link[data-section="bookings"]');
+        if (link) {
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            link.classList.add('active');
+        }
+    }
+
+    // Locate the booking card and highlight it
+    setTimeout(() => {
+        const card = document.querySelector(`.booking-card[data-booking-id="${bookingId}"]`);
+        if (card) {
+            card.classList.add('highlight-row');
+            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => card.classList.remove('highlight-row'), 3000);
+        }
+    }, 200);
+
+    // Strip query params
+    try {
+        const cleanUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, document.title, cleanUrl);
+    } catch (e) { /* ignore */ }
 }
 
 // Render bookings with proper buttons per status
@@ -488,6 +575,7 @@ function renderBookings(bookings) {
     bookings.forEach(booking => {
         const bookingCard = document.createElement('div');
         bookingCard.className = 'booking-card';
+        bookingCard.setAttribute('data-booking-id', booking.id);
 
         const formattedDate = new Date(booking.date).toLocaleDateString('en-US', {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -726,15 +814,17 @@ function openServiceBookingModal(serviceId) {
         .filter(s => s.provider.name === service.provider.name)
         .map(s => s.title);
     
+    const _mSvcFb = "data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20600%20400'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23ffe6f2'/%3E%3Cstop%20offset='1'%20stop-color='%23ffcce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20fill='url(%23g)'%20width='600'%20height='400'/%3E%3Cg%20transform='translate(300,180)'%20fill='%23B20062'%20opacity='0.45'%3E%3Ccircle%20r='46'%20fill='%23fff'%20opacity='0.6'/%3E%3Cpath%20d='M-22,-8%20L-22,18%20L22,18%20L22,-8%20L7,-8%20L0,-20%20L-7,-8%20Z%20M-14,-2%20L14,-2%20L14,12%20L-14,12%20Z'/%3E%3C/g%3E%3C/svg%3E";
+    const _mAvFb = "data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='%23ffe6f2'/%3E%3Ccircle%20cx='50'%20cy='40'%20r='16'%20fill='%23B20062'%20opacity='0.55'/%3E%3Cpath%20d='M18,88%20Q18,60%2050,60%20Q82,60%2082,88%20Z'%20fill='%23B20062'%20opacity='0.55'/%3E%3C/svg%3E";
     modalContent.innerHTML = `
         <div class="service-booking-header">
             <div class="service-booking-img">
-                <img src="${service.image}" alt="${service.title}">
+                <img src="${service.image}" alt="${service.title}" onerror="this.onerror=null;this.src='${_mSvcFb}'">
             </div>
             <div class="service-booking-info">
                 <h3>${service.title}</h3>
                 <div class="provider-info">
-                    <img src="${service.provider.avatar}" alt="${service.provider.name}">
+                    <img src="${service.provider.avatar}" alt="${service.provider.name}" onerror="this.onerror=null;this.src='${_mAvFb}'">
                     <div>
                         <div class="provider-name">${service.provider.name}</div>
                         <div class="provider-rating" id="modal-provider-rating">
@@ -924,8 +1014,11 @@ async function handleServiceBooking(serviceId) {
         showNotification('Provider accepted your booking! You can message them to coordinate.', 'success');
         showSection('bookings');
         document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
         const bkLink = document.querySelector('.nav-link[data-section="bookings"]');
         if (bkLink) bkLink.classList.add('active');
+        const bkMobile = document.querySelector('.mobile-nav-item[data-section="bookings"]');
+        if (bkMobile) bkMobile.classList.add('active');
         loadBookings();
         return;
     }
@@ -1284,7 +1377,7 @@ async function handleQuickBook(e) {
             lng: customerLocation.lng || 25.9231
         });
         params.append('category', category);
-        const res = await fetch(`http://localhost:5000/api/services/nearby?${params}`);
+        const res = await fetch(`https://final-year-project-tirelomate.vercel.app/api/services/nearby?${params}`);
         if (res.ok) rankedProviders = await res.json();
         console.log('Quick Book: Dijkstra returned', rankedProviders.length, 'providers');
     } catch (err) {
@@ -1369,8 +1462,11 @@ async function handleQuickBook(e) {
             showNotification('Provider accepted your booking! You can message them to coordinate.', 'success');
             showSection('bookings');
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            const bkLink = document.querySelector('.nav-link[data-section="bookings"]');
-            if (bkLink) bkLink.classList.add('active');
+            document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
+            const bkLink2 = document.querySelector('.nav-link[data-section="bookings"]');
+            if (bkLink2) bkLink2.classList.add('active');
+            const bkMobile2 = document.querySelector('.mobile-nav-item[data-section="bookings"]');
+            if (bkMobile2) bkMobile2.classList.add('active');
             loadBookings();
             return;
         }
@@ -1408,7 +1504,7 @@ async function updateProfile(e) {
     try {
         if (window.auth && window.auth.isLoggedIn() && currentUser.id) {
             const token = localStorage.getItem('authToken');
-            const res = await fetch(`http://localhost:5000/api/user/${currentUser.id}`, {
+            const res = await fetch(`https://final-year-project-tirelomate.vercel.app/api/user/${currentUser.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ name, phone })
@@ -1657,7 +1753,7 @@ function updateMapMarkers(services) {
             : '';
 
         const popup = `
-            <div style="min-width:180px;font-family:Poppins,sans-serif;">
+            <div style="min-width:min(180px,70vw);font-family:Poppins,sans-serif;">
                 <div style="font-weight:700;font-size:1rem;margin-bottom:4px;">${service.title}</div>
                 <div style="color:#666;font-size:0.85rem;">${service.provider?.name || service.provider_name || 'Provider'}</div>
                 <div style="margin:4px 0;font-weight:600;color:#e91e8c;">P${service.price}</div>
@@ -1937,25 +2033,35 @@ async function loadConversations(silent = false) {
     try {
         const convos = await window.messaging.getConversations();
         if (!Array.isArray(convos) || convos.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="padding:40px 16px;text-align:center;color:#999;"><i class="fas fa-comments" style="font-size:2rem;margin-bottom:8px;"></i><p>No conversations yet</p></div>';
+            container.innerHTML = '<div class="empty-state" style="padding:40px 16px;"><i class="fas fa-comments"></i><p>No conversations yet</p></div>';
             return;
         }
 
-        container.innerHTML = convos.map(c => `
-            <div class="convo-item" data-user-id="${c.user_id}" style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;transition:background 0.15s;${_activeChatUserId === c.user_id ? 'background:#e8e0f7;' : ''}" onmouseover="this.style.background='#f0ecf9'" onmouseout="this.style.background='${_activeChatUserId === c.user_id ? '#e8e0f7' : ''}'">
-                <img src="${c.user_avatar || 'https://via.placeholder.com/40?text=U'}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.user_name}</div>
-                    <div style="font-size:0.8rem;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.is_mine ? 'You: ' : ''}${c.last_message}</div>
+        container.innerHTML = convos.map(c => {
+            const name = c.user_name || 'User';
+            const initial = name.charAt(0).toUpperCase();
+            const colors = ['#e91e8c', '#6c63ff', '#28a745', '#f5a623', '#17a2b8', '#dc3545', '#6f42c1', '#fd7e14'];
+            const color = colors[initial.charCodeAt(0) % colors.length];
+            const avatarHtml = (c.user_avatar && c.user_avatar.startsWith('http') && !c.user_avatar.includes('placeholder'))
+                ? `<img src="${c.user_avatar}" alt="${name}" class="convo-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                  + `<div class="convo-avatar" style="display:none;background:${color};color:#fff;font-weight:700;justify-content:center;align-items:center;font-size:1rem;flex-shrink:0;">${initial}</div>`
+                : `<div class="convo-avatar" style="background:${color};color:#fff;display:flex;font-weight:700;justify-content:center;align-items:center;font-size:1rem;flex-shrink:0;">${initial}</div>`;
+            return `
+            <div class="convo-item${_activeChatUserId === c.user_id ? ' active' : ''}" data-user-id="${c.user_id}">
+                ${avatarHtml}
+                <div class="convo-info">
+                    <div class="convo-name">${name}</div>
+                    <div class="convo-preview">${c.is_mine ? 'You: ' : ''}${c.last_message}</div>
                 </div>
-                <div style="font-size:0.7rem;color:#aaa;white-space:nowrap;">${_timeAgo(c.last_message_at)}</div>
+                <div class="convo-time">${_timeAgo(c.last_message_at)}</div>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         container.querySelectorAll('.convo-item').forEach(el => {
             el.addEventListener('click', () => {
                 const uid = el.getAttribute('data-user-id');
-                const name = el.querySelector('div[style*="font-weight:600"]').textContent;
+                const name = el.querySelector('.convo-name').textContent;
                 _selectConversation(uid, name);
             });
         });
@@ -1993,9 +2099,9 @@ async function _loadChatThread(userId) {
 
         container.innerHTML = messages.map(m => {
             const isMine = m.sender_id === _currentUserId;
-            return `<div style="max-width:70%;padding:10px 14px;border-radius:16px;font-size:0.9rem;line-height:1.4;word-wrap:break-word;${isMine ? 'align-self:flex-end;background:#e91e8c;color:#fff;border-bottom-right-radius:4px;' : 'align-self:flex-start;background:#f0f0f0;color:#333;border-bottom-left-radius:4px;'}">
+            return `<div class="chat-bubble ${isMine ? 'mine' : 'theirs'}">
                 ${m.content}
-                <div style="font-size:0.65rem;margin-top:4px;opacity:0.7;text-align:${isMine ? 'right' : 'left'};">${_timeAgo(m.created_at)}</div>
+                <div class="bubble-time">${_timeAgo(m.created_at)}</div>
             </div>`;
         }).join('');
 
@@ -2023,10 +2129,13 @@ async function _sendMessage(userId) {
 function openMessageWithUser(userId, userName) {
     // Navigate to messages section then open that conversation
     showSection('messages');
-    // Update sidebar active state
+    // Update sidebar and mobile nav active state
     document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
     const msgLink = document.querySelector('.nav-link[data-section="messages"]');
     if (msgLink) msgLink.classList.add('active');
+    const msgMobile = document.querySelector('.mobile-nav-item[data-section="messages"]');
+    if (msgMobile) msgMobile.classList.add('active');
     setTimeout(() => _selectConversation(userId, userName || 'User'), 300);
 }
 

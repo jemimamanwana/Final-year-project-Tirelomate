@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#B20062">
     <title>Provider Dashboard - ServiceHub</title>
     <link rel="stylesheet" href="css/provider-dashboard.css">
+    <link rel="stylesheet" href="css/provider-dashboard-mobile.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -77,7 +82,7 @@
 
             <div class="sidebar-footer">
                 <div class="user-info">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="user-avatar">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="user-avatar" onerror="this.onerror=null;this.src=&quot;data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ffe6f2'/%3E%3Ccircle cx='50' cy='40' r='16' fill='%23B20062' opacity='0.55'/%3E%3Cpath d='M18,88 Q18,60 50,60 Q82,60 82,88 Z' fill='%23B20062' opacity='0.55'/%3E%3C/svg%3E&quot;">
                     <div class="user-details">
                         <span class="user-name" id="sidebarUserName"><span class="skeleton-text" style="width:90px;"></span></span>
                         <span class="user-role">Service Provider</span>
@@ -89,6 +94,53 @@
                 </a>
             </div>
         </aside>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="mobile-bottom-nav">
+            <a href="#" class="mobile-nav-item active" data-section="dashboard">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-section="bookings">
+                <i class="fas fa-calendar-check"></i>
+                <span>Bookings</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-section="services">
+                <i class="fas fa-concierge-bell"></i>
+                <span>Services</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-section="messages">
+                <i class="fas fa-comments"></i>
+                <span>Messages</span>
+            </a>
+            <a href="#" class="mobile-nav-item mobile-more-toggle" data-section="">
+                <i class="fas fa-ellipsis-h"></i>
+                <span>More</span>
+            </a>
+        </nav>
+        <!-- Mobile More Menu -->
+        <div class="mobile-more-menu" id="mobileMoreMenu">
+            <div class="mobile-more-overlay" id="mobileMoreOverlay"></div>
+            <div class="mobile-more-sheet">
+                <div class="mobile-more-handle"></div>
+                <a href="#" class="mobile-more-item" data-section="earnings">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Earnings</span>
+                </a>
+                <a href="#" class="mobile-more-item" data-section="reviews">
+                    <i class="fas fa-star"></i>
+                    <span>Reviews</span>
+                </a>
+                <a href="#" class="mobile-more-item" data-section="profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="#" class="mobile-more-item" data-section="support">
+                    <i class="fas fa-headset"></i>
+                    <span>Support</span>
+                </a>
+            </div>
+        </div>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -238,15 +290,18 @@
             <!-- Earnings Section -->
             <section id="earnings-section" class="content-section">
                 <div class="section-header">
-                    <h2>Earnings</h2>
-                    <p>Track your earnings and transactions</p>
+                    <div>
+                        <h2>Earnings Analytics</h2>
+                        <p>Track your revenue, performance and payouts</p>
+                    </div>
                 </div>
 
-                <div class="earnings-overview">
-                    <div class="earnings-card">
-                        <div class="earnings-header">
-                            <h3>Total Earnings</h3>
-                            <select id="totalEarningsPeriod">
+                <!-- KPI Cards Row -->
+                <div class="earnings-kpi-row">
+                    <div class="earnings-kpi-card earnings-kpi-primary">
+                        <div class="earnings-kpi-top">
+                            <div class="earnings-kpi-icon"><i class="fas fa-wallet"></i></div>
+                            <select id="totalEarningsPeriod" class="earnings-period-select">
                                 <option value="today">Today</option>
                                 <option value="week">This Week</option>
                                 <option value="month" selected>This Month</option>
@@ -254,68 +309,79 @@
                                 <option value="all">All Time</option>
                             </select>
                         </div>
-                        <div class="earnings-amount" id="totalEarningsAmount"><span class="skeleton-text" style="width:80px;height:1.2em;"></span></div>
-                        <div class="earnings-change" id="earningsChange">
+                        <div class="earnings-kpi-value" id="totalEarningsAmount"><span class="skeleton-text" style="width:100px;height:1.4em;"></span></div>
+                        <div class="earnings-kpi-label">Total Earnings</div>
+                        <div class="earnings-kpi-change" id="earningsChange">
                             <i class="fas fa-arrow-up"></i>
-                            <span>12% from last month</span>
+                            <span>Calculating...</span>
                         </div>
                     </div>
-                    
-                    <div class="earnings-stats">
-                        <div class="stat-item">
-                            <div class="stat-label">Completed Jobs</div>
-                            <div class="stat-value" id="completedJobsCount"><span class="skeleton-text" style="width:30px;"></span></div>
+                    <div class="earnings-kpi-card">
+                        <div class="earnings-kpi-icon" style="background:rgba(40,167,69,0.1);color:#28a745;"><i class="fas fa-check-circle"></i></div>
+                        <div class="earnings-kpi-value" id="completedJobsCount"><span class="skeleton-text" style="width:30px;"></span></div>
+                        <div class="earnings-kpi-label">Completed Jobs</div>
+                    </div>
+                    <div class="earnings-kpi-card">
+                        <div class="earnings-kpi-icon" style="background:rgba(67,97,238,0.1);color:#4361ee;"><i class="fas fa-chart-line"></i></div>
+                        <div class="earnings-kpi-value" id="avgPerJob"><span class="skeleton-text" style="width:50px;"></span></div>
+                        <div class="earnings-kpi-label">Avg. per Job</div>
+                    </div>
+                    <div class="earnings-kpi-card">
+                        <div class="earnings-kpi-icon" style="background:rgba(220,53,69,0.1);color:#dc3545;"><i class="fas fa-times-circle"></i></div>
+                        <div class="earnings-kpi-value" id="cancellationRate"><span class="skeleton-text" style="width:30px;"></span></div>
+                        <div class="earnings-kpi-label">Cancellation Rate</div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="earnings-charts-row">
+                    <div class="earnings-chart-card">
+                        <div class="earnings-chart-header">
+                            <h3><i class="fas fa-chart-bar"></i> Revenue Over Time</h3>
+                            <select id="earningsBreakdownPeriod" class="earnings-period-select">
+                                <option value="week">By Week</option>
+                                <option value="month" selected>By Month</option>
+                                <option value="year">By Year</option>
+                            </select>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Avg. per Job</div>
-                            <div class="stat-value" id="avgPerJob"><span class="skeleton-text" style="width:50px;"></span></div>
+                        <div class="chart-container" style="height:300px;">
+                            <canvas id="earningsBreakdownChart"></canvas>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Cancellation Rate</div>
-                            <div class="stat-value" id="cancellationRate"><span class="skeleton-text" style="width:30px;"></span></div>
+                    </div>
+                    <div class="earnings-chart-card">
+                        <div class="earnings-chart-header">
+                            <h3><i class="fas fa-chart-pie"></i> Earnings by Category</h3>
+                        </div>
+                        <div class="chart-container" style="height:300px;">
+                            <canvas id="earningsCategoryChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <div class="earnings-chart-container">
-                    <div class="chart-header">
-                        <h3>Earnings Breakdown</h3>
-                        <select id="earningsBreakdownPeriod">
-                            <option value="week">By Week</option>
-                            <option value="month" selected>By Month</option>
-                            <option value="year">By Year</option>
-                        </select>
+                <!-- Payout + Transactions Row -->
+                <div class="earnings-bottom-row">
+                    <div class="earnings-payout-card">
+                        <div class="earnings-payout-header">
+                            <div class="earnings-payout-icon"><i class="fas fa-money-bill-wave"></i></div>
+                            <h3>Withdraw Earnings</h3>
+                        </div>
+                        <p>Withdraw your earnings securely. You’ll be redirected to a secure checkout.</p>
+                        <div class="earnings-payout-actions">
+                            <button id="btnPayoutGateway" class="primary-btn">
+                                <i class="fas fa-lock"></i> Secure Gateway
+                            </button>
+                            <button id="btnPayoutPaypal" class="outline-btn">
+                                <i class="fab fa-paypal"></i> PayPal
+                            </button>
+                        </div>
                     </div>
-                    <div class="chart-container">
-                        <canvas id="earningsBreakdownChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="section-container" style="margin-top: 20px;">
-                    <h3>Withdraw / Payout</h3>
-                    <p style="color:#666; margin-bottom:12px;">Withdraw your earnings securely. You’ll be redirected to a secure gateway.</p>
-                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                        <button id="btnPayoutGateway" class="primary-btn">
-                            <i class="fas fa-lock"></i>
-                            Pay via Secure Gateway
-                        </button>
-                        <button id="btnPayoutPaypal" class="outline-btn">
-                            <i class="fab fa-paypal"></i>
-                            Pay with PayPal
-                        </button>
-                    </div>
-                    <div style="margin-top:14px; color:#6c757d; font-size:0.95rem;">
-                        You’ll complete the payout process on the provider’s secure checkout.
-                    </div>
-                </div>
-
-                <div class="transactions-container">
-                    <div class="transactions-header">
-                        <h3>Recent Transactions</h3>
-                        <a href="#" class="view-all">View All</a>
-                    </div>
-                    <div class="transactions-list" id="transactionsList">
-                        <!-- Transactions will be loaded here -->
+                    <div class="earnings-transactions-card">
+                        <div class="earnings-chart-header">
+                            <h3><i class="fas fa-exchange-alt"></i> Recent Transactions</h3>
+                        </div>
+                        <div class="transactions-list" id="transactionsList">
+                            <!-- Transactions will be loaded here -->
+                        </div>
                     </div>
                 </div>
             </section>
@@ -330,7 +396,7 @@
                 <div class="profile-content">
                     <div class="profile-avatar-section">
                         <div class="avatar-container">
-                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile" class="profile-avatar">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Profile" class="profile-avatar" onerror="this.onerror=null;this.src=&quot;data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ffe6f2'/%3E%3Ccircle cx='50' cy='40' r='16' fill='%23B20062' opacity='0.55'/%3E%3Cpath d='M18,88 Q18,60 50,60 Q82,60 82,88 Z' fill='%23B20062' opacity='0.55'/%3E%3C/svg%3E&quot;">
                             <button class="change-avatar-btn">
                                 <i class="fas fa-camera"></i>
                             </button>
@@ -450,16 +516,16 @@
                     <h2>Customer Reviews</h2>
                     <p>See what your customers are saying</p>
                 </div>
-                <div id="providerRatingSummary" style="display:flex;align-items:center;gap:16px;padding:16px 0;margin-bottom:16px;">
-                    <div style="font-size:2.5rem;font-weight:700;color:#333;" id="providerAvgRating">--</div>
+                <div id="providerRatingSummary" class="reviews-summary">
+                    <div class="avg-score" id="providerAvgRating">--</div>
                     <div>
-                        <div id="providerAvgStars" style="font-size:1.3rem;color:#f5a623;"></div>
-                        <div id="providerReviewCount" style="color:#888;font-size:0.9rem;">Loading...</div>
+                        <div id="providerAvgStars" class="avg-stars"></div>
+                        <div id="providerReviewCount" class="review-count">Loading...</div>
                     </div>
                 </div>
                 <div id="providerReviewsList">
-                    <div class="empty-state" style="padding:40px;text-align:center;color:#999;">
-                        <i class="fas fa-star" style="font-size:2rem;margin-bottom:8px;"></i>
+                    <div class="empty-state">
+                        <i class="fas fa-star"></i>
                         <p>No reviews yet</p>
                     </div>
                 </div>
@@ -471,25 +537,25 @@
                     <h2>Messages</h2>
                     <p>Chat with your customers</p>
                 </div>
-                <div class="messages-container" style="display:flex;gap:0;height:calc(100vh - 200px);border:1px solid #e0e0e0;border-radius:12px;overflow:hidden;background:#fff;">
-                    <div id="conversationsList" style="width:300px;min-width:260px;border-right:1px solid #e0e0e0;overflow-y:auto;background:#fafafa;">
-                        <div style="padding:16px;border-bottom:1px solid #e0e0e0;font-weight:700;font-size:1rem;">Conversations</div>
-                        <div id="convoListItems" style="padding:0;">
-                            <div class="empty-state" style="padding:40px 16px;text-align:center;color:#999;">
-                                <i class="fas fa-comments" style="font-size:2rem;margin-bottom:8px;"></i>
+                <div class="messages-container">
+                    <div id="conversationsList" class="convo-sidebar">
+                        <div class="convo-sidebar-header"><i class="fas fa-comments"></i> Conversations</div>
+                        <div id="convoListItems">
+                            <div class="empty-state" style="padding:40px 16px;">
+                                <i class="fas fa-comments"></i>
                                 <p>No conversations yet</p>
                             </div>
                         </div>
                     </div>
-                    <div id="chatPanel" style="flex:1;display:flex;flex-direction:column;">
-                        <div id="chatHeader" style="padding:14px 20px;border-bottom:1px solid #e0e0e0;font-weight:600;background:#fff;display:flex;align-items:center;gap:10px;">
-                            <span id="chatWithName" style="color:#999;">Select a conversation</span>
+                    <div id="chatPanel" class="chat-panel">
+                        <div id="chatHeader" class="chat-header">
+                            <span id="chatWithName" style="color:var(--lighter-text);">Select a conversation</span>
                         </div>
-                        <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;">
+                        <div id="chatMessages" class="chat-messages">
                         </div>
-                        <div id="chatInputArea" style="padding:12px 16px;border-top:1px solid #e0e0e0;display:none;align-items:center;gap:8px;">
-                            <input type="text" id="chatMessageInput" placeholder="Type a message..." style="flex:1;padding:10px 14px;border:1px solid #ddd;border-radius:20px;font-size:0.95rem;outline:none;">
-                            <button id="chatSendBtn" class="primary-btn" style="border-radius:50%;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;">
+                        <div id="chatInputArea" class="chat-input-area" style="display:none;">
+                            <input type="text" id="chatMessageInput" placeholder="Type a message...">
+                            <button id="chatSendBtn" class="chat-send-btn">
                                 <i class="fas fa-paper-plane"></i>
                             </button>
                         </div>
@@ -659,9 +725,6 @@
             }
         })();
     </script>
-
-
-
 
 
 
