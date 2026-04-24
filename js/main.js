@@ -471,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             serviceCard.innerHTML = `
                 <div class="service-img">
-                    <img src="${service.image}" alt="${service.title}" onerror="this.src='https://via.placeholder.com/300x200?text=Service+Image'">
+                    <img src="${service.image}" alt="${service.title}" onerror="this.src="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20600%20400'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23ffe6f2'/%3E%3Cstop%20offset='1'%20stop-color='%23ffcce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20fill='url(%23g)'%20width='600'%20height='400'/%3E%3Cg%20transform='translate(300,180)'%20fill='%23B20062'%20opacity='0.45'%3E%3Ccircle%20r='46'%20fill='%23fff'%20opacity='0.6'/%3E%3Cpath%20d='M-22,-8%20L-22,18%20L22,18%20L22,-8%20L7,-8%20L0,-20%20L-7,-8%20Z%20M-14,-2%20L14,-2%20L14,12%20L-14,12%20Z'/%3E%3C/g%3E%3Ctext%20x='300'%20y='280'%20text-anchor='middle'%20font-family='Arial,sans-serif'%20font-size='18'%20font-weight='600'%20fill='%23B20062'%20opacity='0.7'%3EService%3C/text%3E%3C/svg%3E"">
                 </div>
                 <div class="service-info">
                     <h3>${service.title}</h3>
@@ -484,7 +484,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </span>
                     </div>
                     <div class="service-provider">
-                        <img src="${service.provider.avatar}" alt="${service.provider.name}" onerror="this.src='https://via.placeholder.com/50?text=Provider'">
+                        <img src="${service.provider.avatar}" alt="${service.provider.name}" onerror="this.src="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='%23ffe6f2'/%3E%3Ccircle%20cx='50'%20cy='40'%20r='16'%20fill='%23B20062'%20opacity='0.55'/%3E%3Cpath%20d='M18,88%20Q18,60%2050,60%20Q82,60%2082,88%20Z'%20fill='%23B20062'%20opacity='0.55'/%3E%3C/svg%3E"">
                         <span>${service.provider.name}</span>
                     </div>
                 </div>
@@ -507,12 +507,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.getElementById('serviceModalContent').innerHTML = `
             <div class="service-modal-img">
-                <img src="${service.image}" alt="${service.title}" onerror="this.src='https://via.placeholder.com/600x400?text=Service+Image'">
+                <img src="${service.image}" alt="${service.title}" onerror="this.src="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20600%20400'%3E%3Cdefs%3E%3ClinearGradient%20id='g'%20x1='0'%20y1='0'%20x2='1'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23ffe6f2'/%3E%3Cstop%20offset='1'%20stop-color='%23ffcce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20fill='url(%23g)'%20width='600'%20height='400'/%3E%3Cg%20transform='translate(300,180)'%20fill='%23B20062'%20opacity='0.45'%3E%3Ccircle%20r='46'%20fill='%23fff'%20opacity='0.6'/%3E%3Cpath%20d='M-22,-8%20L-22,18%20L22,18%20L22,-8%20L7,-8%20L0,-20%20L-7,-8%20Z%20M-14,-2%20L14,-2%20L14,12%20L-14,12%20Z'/%3E%3C/g%3E%3Ctext%20x='300'%20y='280'%20text-anchor='middle'%20font-family='Arial,sans-serif'%20font-size='18'%20font-weight='600'%20fill='%23B20062'%20opacity='0.7'%3EService%3C/text%3E%3C/svg%3E"">
             </div>
             <div class="service-modal-info">
                 <h3>${service.title}</h3>
                 <div class="service-provider-info">
-                    <img src="${service.provider.avatar}" alt="${service.provider.name}" onerror="this.src='https://via.placeholder.com/100?text=Provider'">
+                    <img src="${service.provider.avatar}" alt="${service.provider.name}" onerror="this.src="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='%23ffe6f2'/%3E%3Ccircle%20cx='50'%20cy='40'%20r='16'%20fill='%23B20062'%20opacity='0.55'/%3E%3Cpath%20d='M18,88%20Q18,60%2050,60%20Q82,60%2082,88%20Z'%20fill='%23B20062'%20opacity='0.55'/%3E%3C/svg%3E"">
                     <div>
                         <h4>${service.provider.name}</h4>
                         <div class="rating">
@@ -536,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         ? serviceReviews.map(review => `
                             <div class="review">
                                 <div class="review-user">
-                                    <img src="${review.avatar}" alt="${review.user}" onerror="this.src='https://via.placeholder.com/50?text=User'">
+                                    <img src="${review.avatar}" alt="${review.user}" onerror="this.src="data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Ccircle%20cx='50'%20cy='50'%20r='50'%20fill='%23ffe6f2'/%3E%3Ccircle%20cx='50'%20cy='40'%20r='16'%20fill='%23B20062'%20opacity='0.55'/%3E%3Cpath%20d='M18,88%20Q18,60%2050,60%20Q82,60%2082,88%20Z'%20fill='%23B20062'%20opacity='0.55'/%3E%3C/svg%3E"">
                                     <div class="review-user-info">
                                         <h4>${review.user}</h4>
                                         <div class="rating">

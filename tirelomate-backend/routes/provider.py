@@ -1,6 +1,10 @@
+import logging
+
 from flask import Blueprint, request, jsonify
 from models.supabase_client import supabase
 from utils.auth_helpers import token_required
+
+logger = logging.getLogger(__name__)
 
 provider_bp = Blueprint("provider", __name__)
 
@@ -96,5 +100,36 @@ def update_provider_booking(booking_id):
 
     if not result.data:
         return jsonify({"error": "Update failed — database may have rejected the status value. Check Supabase constraints."}), 500
+
+    if status == "confirmed":
+        try:
+            from services.email_service import send_booking_confirmed_email
+
+            bk = booking.data[0]
+            customer_result = (
+                supabase.table("users")
+                .select("email, name")
+                .eq("id", bk["customer_id"])
+                .execute()
+            )
+            service_result = (
+                supabase.table("services")
+                .select("title")
+                .eq("id", bk["service_id"])
+                .execute()
+            )
+            if customer_result.data and service_result.data:
+                customer = customer_result.data[0]
+                send_booking_confirmed_email(
+                    customer_email=customer["email"],
+                    customer_name=customer["name"],
+                    provider_name=user.get("name", "Your provider"),
+                    service_title=service_result.data[0]["title"],
+                    booking_date=bk.get("date", ""),
+                    booking_time=bk.get("time", ""),
+                    booking_id=booking_id,
+                )
+        except Exception as exc:
+            logger.warning("Could not send booking-confirmed email: %s", exc)
 
     return jsonify(result.data[0]), 200

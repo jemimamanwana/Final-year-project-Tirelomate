@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_mail import Mail
 from config import Config
 from routes.auth import auth_bp
 from routes.user import user_bp
@@ -9,11 +10,16 @@ from routes.provider import provider_bp
 from routes.reviews import reviews_bp
 from routes.messages import messages_bp
 from routes.payments import payments_bp
+from routes.dev_email import dev_email_bp
+
+mail = Mail()
 
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    mail.init_app(app)
 
     # CORS: Allow all origins during development
     CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -27,6 +33,7 @@ def create_app():
     app.register_blueprint(reviews_bp)
     app.register_blueprint(messages_bp)
     app.register_blueprint(payments_bp)
+    app.register_blueprint(dev_email_bp)
 
     @app.route("/")
     def health():

@@ -1,6 +1,10 @@
+import logging
+
 from flask import Blueprint, request, jsonify
 from models.supabase_client import supabase
 from utils.auth_helpers import token_required
+
+logger = logging.getLogger(__name__)
 
 bookings_bp = Blueprint("bookings", __name__)
 
@@ -71,7 +75,39 @@ def create_booking():
     if not result.data:
         return jsonify({"error": "Failed to create booking"}), 500
 
-    return jsonify(result.data[0]), 201
+    booking = result.data[0]
+
+    try:
+        from services.email_service import send_booking_created_email
+
+        provider_result = (
+            supabase.table("users")
+            .select("email, name")
+            .eq("id", provider_id)
+            .execute()
+        )
+        service_result = (
+            supabase.table("services")
+            .select("title")
+            .eq("id", service_id)
+            .execute()
+        )
+        if provider_result.data and service_result.data:
+            provider = provider_result.data[0]
+            send_booking_created_email(
+                provider_email=provider["email"],
+                provider_name=provider["name"],
+                customer_name=user.get("name", "A customer"),
+                service_title=service_result.data[0]["title"],
+                booking_date=data["date"],
+                booking_time=data["time"],
+                notes=data.get("notes", ""),
+                booking_id=booking["id"],
+            )
+    except Exception as exc:
+        logger.warning("Could not send booking-created email: %s", exc)
+
+    return jsonify(booking), 201
 
 
 @bookings_bp.route("/api/bookings/<booking_id>", methods=["PUT"])

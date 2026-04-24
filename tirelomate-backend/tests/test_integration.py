@@ -220,6 +220,9 @@ def app(fake_db):
     fake_supa = FakeSupabase(fake_db)
 
     # Patch every module that imports supabase at module level
+    mock_send_created = MagicMock(return_value=True)
+    mock_send_confirmed = MagicMock(return_value=True)
+
     patches = [
         patch("models.supabase_client.supabase", fake_supa),
         patch("routes.auth.supabase", fake_supa),
@@ -230,6 +233,8 @@ def app(fake_db):
         patch("routes.reviews.supabase", fake_supa),
         patch("routes.messages.supabase", fake_supa),
         patch("routes.payments.supabase", fake_supa),
+        patch("services.email_service.send_booking_created_email", mock_send_created),
+        patch("services.email_service.send_booking_confirmed_email", mock_send_confirmed),
     ]
     for p in patches:
         p.start()
@@ -238,6 +243,8 @@ def app(fake_db):
 
     flask_app = create_app()
     flask_app.config["TESTING"] = True
+    flask_app._mock_send_created = mock_send_created
+    flask_app._mock_send_confirmed = mock_send_confirmed
 
     yield flask_app
 
@@ -380,13 +387,22 @@ class TestFullUserFlow:
         assert svc["distance_km"] > 0  # Customer is ~4 km from provider
 
     # ---- Step 5: Book the service as a customer ----
-    def test_05_create_booking(self, client, fake_db):
+    def test_05_create_booking(self, client, fake_db, app):
         # Set up DB state
         fake_db.users.append({
             "id": CUSTOMER_ID,
             "name": "Test Customer",
             "email": "customer@test.com",
             "role": "customer",
+            "avatar_url": None,
+            "password_hash": "x",
+            "created_at": "2026-03-15T00:00:00+00:00",
+        })
+        fake_db.users.append({
+            "id": PROVIDER_ID,
+            "name": "Test Provider",
+            "email": "provider@test.com",
+            "role": "provider",
             "avatar_url": None,
             "password_hash": "x",
             "created_at": "2026-03-15T00:00:00+00:00",
@@ -402,6 +418,8 @@ class TestFullUserFlow:
             "location_lng": 25.8950,
             "created_at": "2026-03-15T00:00:00+00:00",
         })
+
+        app._mock_send_created.reset_mock()
 
         from utils.auth_helpers import create_token
         token = create_token(CUSTOMER_ID, role="customer")
@@ -424,14 +442,37 @@ class TestFullUserFlow:
         assert booking["date"] == "2026-03-20"
         assert booking["time"] == "10:00"
 
+        # Verify email notification was triggered
+        app._mock_send_created.assert_called_once()
+        call_kwargs = app._mock_send_created.call_args
+        args = call_kwargs.kwargs if call_kwargs.kwargs else {}
+        if not args:
+            args = dict(zip(
+                ["provider_email", "provider_name", "customer_name",
+                 "service_title", "booking_date", "booking_time", "notes", "booking_id"],
+                call_kwargs.args,
+            ))
+        assert args["provider_email"] == "provider@test.com"
+        assert args["customer_name"] == "Test Customer"
+        assert args["service_title"] == "Test Cleaning"
+
     # ---- Step 6: Provider confirms the booking ----
-    def test_06_provider_confirms_booking(self, client, fake_db):
+    def test_06_provider_confirms_booking(self, client, fake_db, app):
         # Set up DB state
         fake_db.users.append({
             "id": PROVIDER_ID,
             "name": "Test Provider",
             "email": "provider@test.com",
             "role": "provider",
+            "avatar_url": None,
+            "password_hash": "x",
+            "created_at": "2026-03-15T00:00:00+00:00",
+        })
+        fake_db.users.append({
+            "id": CUSTOMER_ID,
+            "name": "Test Customer",
+            "email": "customer@test.com",
+            "role": "customer",
             "avatar_url": None,
             "password_hash": "x",
             "created_at": "2026-03-15T00:00:00+00:00",
@@ -447,6 +488,17 @@ class TestFullUserFlow:
             "notes": "Please bring supplies",
             "created_at": "2026-03-15T00:00:00+00:00",
         })
+        fake_db.services.append({
+            "id": SERVICE_ID,
+            "provider_id": PROVIDER_ID,
+            "title": "Test Cleaning",
+            "category": "home",
+            "price": 100,
+            "is_active": True,
+            "created_at": "2026-03-15T00:00:00+00:00",
+        })
+
+        app._mock_send_confirmed.reset_mock()
 
         from utils.auth_helpers import create_token
         token = create_token(PROVIDER_ID, role="provider")
@@ -461,6 +513,20 @@ class TestFullUserFlow:
         booking = resp.get_json()
         assert booking["id"] == BOOKING_ID
         assert booking["status"] == "confirmed"
+
+        # Verify email notification was triggered
+        app._mock_send_confirmed.assert_called_once()
+        call_kwargs = app._mock_send_confirmed.call_args
+        args = call_kwargs.kwargs if call_kwargs.kwargs else {}
+        if not args:
+            args = dict(zip(
+                ["customer_email", "customer_name", "provider_name",
+                 "service_title", "booking_date", "booking_time", "booking_id"],
+                call_kwargs.args,
+            ))
+        assert args["customer_email"] == "customer@test.com"
+        assert args["provider_name"] == "Test Provider"
+        assert args["service_title"] == "Test Cleaning"
 
     # ---- Step 7: Customer leaves a 5-star review ----
     def test_07_create_review(self, client, fake_db):
